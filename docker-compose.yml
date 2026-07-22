@@ -1,0 +1,15 @@
+services:
+  app:
+    container_name: antifa_logo_gen
+    image: ghcr.io/noanwastaken/antifalogogenerator:latest
+
+    build: .
+    restart: unless-stopped
+    networks:
+      - web
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+networks:
+  web:
+    external: true

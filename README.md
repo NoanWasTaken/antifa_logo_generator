@@ -19,4 +19,4 @@ bun dev
 
 ## License
 
-MIT
+[MIT](https://github.com/NoanWasTaken/antifa_logo_generator/edit/dev/LICENSE)

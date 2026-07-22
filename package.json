@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "opentype.js": "^2.0.0"
+  },
+  "scripts": {
+    "dev": "bun run build && npx serve .",
+    "build": "bun build app.js --outdir=dist --target=browser --format=iife"
+  }
+}

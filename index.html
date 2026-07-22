@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>
+      Antifascist Logo Generator — Create Custom SVG Antifascist Logo
+    </title>
+    <meta
+      name="description"
+      content="Create a custom antifascist logo online. Add your own text, upload a central image or SVG, adjust colors and layout, then download or copy the SVG code. Free, no sign-up required."
+    />
+    <meta name="robots" content="index, follow" />
+    <link
+      rel="canonical"
+      href="https://antifalogogenerator.noandelatouche.dev/"
+    />
+
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:title"
+      content="Antifascist Logo Generator — Create Custom SVG Antifascist Logo"
+    />
+    <meta
+      property="og:description"
+      content="Create a custom antifascist logo online. Add your own text, upload a central image or SVG, adjust colors and layout, then download or copy the SVG code."
+    />
+    <meta
+      property="og:image"
+      content="https://antifalogogenerator.noandelatouche.dev/og-image.png"
+    />
+    <meta
+      property="og:url"
+      content="https://antifalogogenerator.noandelatouche.dev/"
+    />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Antifascist Logo Generator — Create Custom SVG Antifascist Logo"
+    />
+    <meta
+      name="twitter:description"
+      content="Create a custom antifascist logo online. Add your own text, upload a central image or SVG, adjust colors and layout, then download or copy the SVG code."
+    />
+    <meta
+      name="twitter:image"
+      content="https://antifalogogenerator.noandelatouche.dev/og-image.png"
+    />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Antifascist Logo Generator",
+        "url": "https://antifalogogenerator.noandelatouche.dev/",
+        "description": "Online tool to create custom antifascist logos. Add text on an arc, upload a central image, adjust layout, and download as SVG.",
+        "applicationCategory": "Multimedia",
+        "operatingSystem": "All",
+        "browserRequirements": "Requires JavaScript"
+      }
+    </script>
+
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="panel">
+        <h1>Antifascist Logo Generator</h1>
+        <p class="subtitle">
+          Customize your logo with text on an arc, a central image, and
+          adjustable layout.
+        </p>
+        <div id="fontStatus" class="font-status"></div>
+
+        <div class="field">
+          <label for="topText">Top text</label>
+          <input
+            type="text"
+            id="topText"
+            value="ANTIFASCIST"
+            spellcheck="false"
+          />
+        </div>
+
+        <div class="field">
+          <label for="bottomText">Bottom text</label>
+          <input
+            type="text"
+            id="bottomText"
+            value="ACTION"
+            spellcheck="false"
+          />
+        </div>
+
+        <hr />
+        <div class="image_settings">
+          <h3>Image Settings</h3>
+          <div class="field">
+            <label for="logoUpload"
+              >Central logo (SVG or png - <span>SVG works best</span>)</label
+            >
+            <input type="file" id="logoUpload" accept="image/*,.svg" />
+            <div class="note">
+              Replaces the flags. The image is split red/black. Transparent
+              background recommended.
+            </div>
+          </div>
+
+          <div class="field">
+            <label
+              >Red/black split
+              <span class="val" id="splitLabel">50%</span></label
+            >
+            <input type="range" id="splitPos" min="0" max="100" value="50" />
+          </div>
+
+          <div class="field">
+            <label
+              >Logo scale <span class="val" id="logoSzLabel">100%</span></label
+            >
+            <input type="range" id="logoSz" min="30" max="150" value="100" />
+          </div>
+
+          <div class="field">
+            <label
+              >Logo position X <span class="val" id="logoXLabel">0</span></label
+            >
+            <input type="range" id="logoX" min="-100" max="100" value="0" />
+          </div>
+
+          <div class="field">
+            <label
+              >Logo position Y <span class="val" id="logoYLabel">0</span></label
+            >
+            <input type="range" id="logoY" min="-100" max="100" value="0" />
+          </div>
+        </div>
+
+        <hr />
+
+        <div class="text_settings">
+          <h3>Text Settings</h3>
+          <div class="field">
+            <label for="fontSize"
+              >Font size <span class="val" id="sizeLabel">40px</span></label
+            >
+            <input type="range" id="fontSize" min="16" max="56" value="40" />
+          </div>
+
+          <div class="field">
+            <label for="topY"
+              >Top text Y position
+              <span class="val" id="topYLabel">250</span></label
+            >
+            <input type="range" id="topY" min="210" max="280" value="250" />
+          </div>
+
+          <div class="field">
+            <label for="botY"
+              >Bottom text Y position
+              <span class="val" id="botYLabel">278</span></label
+            >
+            <input type="range" id="botY" min="240" max="300" value="278" />
+          </div>
+        </div>
+
+        <hr />
+
+        <div class="actions">
+          <button class="btn-primary" id="downloadBtn">Download SVG</button>
+          <button class="btn-secondary" id="copyBtn">Copy code</button>
+        </div>
+
+        <textarea id="svgCode" readonly></textarea>
+      </div>
+
+      <div class="panel preview-box">
+        <h2>Live Preview</h2>
+        <div
+          id="preview"
+          role="img"
+          aria-label="Antifascist logo preview"
+        ></div>
+      </div>
+    </div>
+    <footer><a href="cgu.html">CGU</a></footer>
+    <script src="dist/app.js"></script>
+  </body>
+</html>

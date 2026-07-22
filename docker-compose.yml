@@ -1,0 +1,11 @@
+services:
+  app:
+    container_name: antifa_logo_gen
+    build: .
+    restart: unless-stopped
+    networks:
+      - web
+
+networks:
+  web:
+    external: true

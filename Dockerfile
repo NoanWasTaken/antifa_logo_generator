@@ -6,5 +6,5 @@ COPY . .
 RUN bun run build
 
 FROM nginx:alpine
-COPY index.html cgu.html style.css favicon.ico robots.txt sitemap.xml /usr/share/nginx/html/
+COPY index.html cgu.html style.css favicon.ico /usr/share/nginx/html/
 COPY --from=builder /app/dist /usr/share/nginx/html/dist

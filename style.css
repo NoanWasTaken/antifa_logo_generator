@@ -38,6 +38,7 @@ h1 {
   font-size: 1.4rem;
   margin-bottom: 0.5rem;
   color: #fff;
+  display: inline-block;
 }
 .subtitle {
   font-size: 0.85rem;

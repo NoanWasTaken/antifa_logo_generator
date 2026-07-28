@@ -156,6 +156,18 @@ hr {
   margin-bottom: 0.5rem;
 }
 
+.counter {
+  font-size: 0.8rem;
+  color: #888;
+  text-align: center;
+  margin-top: -0.5rem;
+  margin-bottom: 1rem;
+}
+.counter .num {
+  color: #cc0000;
+  font-weight: 700;
+}
+
 /* CGU page */
 .cgu {
   max-width: 720px;
@@ -188,6 +200,8 @@ hr {
   text-decoration: underline;
 }
 footer {
+  display: flex;
+  gap: 2rem;
   text-align: center;
   margin-top: 2rem;
   font-size: 0.8rem;

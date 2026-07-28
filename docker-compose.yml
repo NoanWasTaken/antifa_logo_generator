@@ -1,14 +1,19 @@
 services:
   app:
     container_name: antifa_logo_gen
-    image: ghcr.io/noanwastaken/antifalogogenerator:latest
-
     build: .
     restart: unless-stopped
+    environment:
+      - DATA_DIR=/data
+    volumes:
+      - antifa_data:/data
     networks:
       - web
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
+
+volumes:
+  antifa_data:
 
 networks:
   web:

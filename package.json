@@ -3,7 +3,8 @@
     "opentype.js": "^2.0.0"
   },
   "scripts": {
-    "dev": "bun run build && npx serve .",
-    "build": "bun build app.js --outdir=dist --target=browser --format=iife"
+    "dev": "bun run build && bun run server.js",
+    "build": "bun build app.js --outdir=dist --target=browser --format=iife",
+    "start": "bun run server.js"
   }
 }

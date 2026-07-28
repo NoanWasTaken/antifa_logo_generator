@@ -21,12 +21,30 @@ async function loadFont() {
   }
 }
 
+async function fetchCounter() {
+  const res = await fetch("/api/count");
+  const data = await res.json();
+  $("counter").innerHTML =
+    `The community has already generated <span class="num">${data.count.toLocaleString()}</span> logos with this app`;
+}
+
+async function incrementCounter() {
+  const res = await fetch("/api/count", { method: "POST" });
+  const data = await res.json();
+  $("counter").innerHTML =
+    `The community has already generated <span class="num">${data.count.toLocaleString()}</span> logos with this app`;
+}
+
 function processImage(dataURL, splitPct, cb) {
   const img = new Image();
   img.onload = () => {
     const canvas = document.createElement("canvas");
-    let w = img.width, h = img.height;
-    if (w === 0 || h === 0) { cb(dataURL); return; }
+    let w = img.width,
+      h = img.height;
+    if (w === 0 || h === 0) {
+      cb(dataURL);
+      return;
+    }
     const maxDim = 1024;
     if (w > maxDim || h > maxDim) {
       const r = Math.min(maxDim / w, maxDim / h);
@@ -190,6 +208,7 @@ function download() {
     a.click();
     URL.revokeObjectURL(url);
   });
+  incrementCounter();
 }
 
 function copyCode() {
@@ -201,6 +220,7 @@ function copyCode() {
       setTimeout(() => (btn.textContent = original), 1500);
     });
   });
+  incrementCounter();
 }
 
 [
@@ -218,4 +238,5 @@ $("logoUpload").addEventListener("change", render);
 $("downloadBtn").addEventListener("click", download);
 $("copyBtn").addEventListener("click", copyCode);
 
+fetchCounter();
 loadFont();

@@ -5,6 +5,9 @@ RUN bun install
 COPY . .
 RUN bun run build
 
-FROM nginx:alpine
-COPY index.html cgu.html style.css favicon.ico sitemap.xml /usr/share/nginx/html/
-COPY --from=builder /app/dist /usr/share/nginx/html/dist
+FROM oven/bun:1
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY server.js package.json ./
+COPY index.html cgu.html style.css favicon.ico sitemap.xml ./
+CMD ["bun", "run", "server.js"]

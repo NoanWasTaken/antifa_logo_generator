@@ -28,20 +28,21 @@ function getCount() {
   return db.query("SELECT value FROM counter WHERE id = 1").get().value;
 }
 
+function ts() {
+  return new Date().toLocaleString("fr-FR", { hour12: false });
+}
+
 function incrementCount() {
   db.run("UPDATE counter SET value = value + 1 WHERE id = 1");
-  const count = getCount();
-  const now = new Date().toLocaleString("fr-FR", options);
-
-  console.log(`${now} -> Logo created! Total count: ${count}`);
-  return count;
+  console.log(`${ts()} -> Logo created! Total count: ${getCount()}`);
+  return getCount();
 }
-var options = { hour12: false };
+
 function logVisit(ip) {
-  const now = new Date().toLocaleString("fr-FR", options);
-  if (!visitLog.has(ip) || now - visitLog.get(ip) > 60000) {
-    visitLog.set(ip, now);
-    console.log(`${now} -> Visit from ${ip}`);
+  const t = Date.now();
+  if (!visitLog.has(ip) || t - visitLog.get(ip) > 60000) {
+    visitLog.set(ip, t);
+    console.log(`${ts()} -> Visit from ${ip}`);
   }
 }
 
@@ -69,7 +70,14 @@ Bun.serve({
     let path = url.pathname;
     if (path === "/") path = "/index.html";
     const file = Bun.file("." + path);
-    if (await file.exists()) return new Response(file);
+    if (await file.exists()) {
+      const cache = path.endsWith(".css") || path.endsWith(".html")
+        ? "no-cache, no-store, must-revalidate"
+        : "public, max-age=3600";
+      return new Response(file, {
+        headers: { "Cache-Control": cache },
+      });
+    }
 
     return new Response("Not Found", { status: 404 });
   },

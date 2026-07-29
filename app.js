@@ -115,6 +115,17 @@ function textOnArc(text, cy, sweep, fontSize) {
   return out;
 }
 
+function gridSVG() {
+  let out = "";
+  for (let i = 0; i <= 500; i += 50) {
+    out += `<line x1="${i}" y1="0" x2="${i}" y2="500" stroke="rgba(204,0,0,0.5)" stroke-width="0.5"/>`;
+    out += `<line x1="0" y1="${i}" x2="500" y2="${i}" stroke="rgba(204,0,0,0.5)" stroke-width="0.5"/>`;
+  }
+  out += `<line x1="250" y1="0" x2="250" y2="500" stroke="rgba(204,0,0,0.5)" stroke-width="1"/>`;
+  out += `<line x1="0" y1="250" x2="500" y2="250" stroke="rgba(204,0,0,0.5)" stroke-width="1"/>`;
+  return out;
+}
+
 function buildSVG({
   topText,
   bottomText,
@@ -142,6 +153,7 @@ function buildSVG({
 
   const topPaths = textOnArc(topText, topY, 1, fontSize);
   const botPaths = textOnArc(bottomText, botY, 0, fontSize);
+  const gridLines = $("gridToggle").checked ? gridSVG() : "";
 
   return `<?xml version="1.0" encoding="utf-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="500" height="500">
@@ -149,6 +161,7 @@ function buildSVG({
   ${centerGroup}
   <g fill="#fff">${topPaths}</g>
   <g fill="#fff">${botPaths}</g>
+  <g stroke-linecap="round">${gridLines}</g>
 </svg>`;
 }
 
@@ -235,6 +248,7 @@ function copyCode() {
   "logoY",
 ].forEach((id) => $(id).addEventListener("input", render));
 $("logoUpload").addEventListener("change", render);
+$("gridToggle").addEventListener("change", render);
 $("downloadBtn").addEventListener("click", download);
 $("copyBtn").addEventListener("click", copyCode);
 

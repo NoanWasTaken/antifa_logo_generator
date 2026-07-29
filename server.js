@@ -12,6 +12,7 @@ db.run("INSERT OR IGNORE INTO counter (id, value) VALUES (1, 0)");
 const RATE_LIMIT = 10;
 const RATE_WINDOW = 60_000;
 const hits = new Map();
+const visitLog = new Map();
 
 function rateLimit(ip) {
   const now = Date.now();
@@ -29,21 +30,40 @@ function getCount() {
 
 function incrementCount() {
   db.run("UPDATE counter SET value = value + 1 WHERE id = 1");
-  return getCount();
+  const count = getCount();
+  const now = new Date().toLocaleString("fr-FR", options);
+
+  console.log(`${now} -> Logo created! Total count: ${count}`);
+  return count;
+}
+var options = { hour12: false };
+function logVisit(ip) {
+  const now = new Date().toLocaleString("fr-FR", options);
+  if (!visitLog.has(ip) || now - visitLog.get(ip) > 60000) {
+    visitLog.set(ip, now);
+    console.log(`${now} -> Visit from ${ip}`);
+  }
 }
 
 Bun.serve({
   async fetch(req) {
     const url = new URL(req.url);
+    const ip = req.headers.get("x-forwarded-for") || "local";
 
     if (url.pathname === "/api/count") {
-      if (req.method === "GET") return Response.json({ count: getCount() });
+      if (req.method === "GET") {
+        logVisit(ip);
+        return Response.json({ count: getCount() });
+      }
       if (req.method === "POST") {
-        const ip = req.headers.get("x-forwarded-for") || "local";
         if (rateLimit(ip))
           return Response.json({ error: "Too many requests" }, { status: 429 });
         return Response.json({ count: incrementCount() });
       }
+    }
+
+    if (url.pathname === "/") {
+      logVisit(ip);
     }
 
     let path = url.pathname;

@@ -71,11 +71,12 @@ Bun.serve({
     if (path === "/") path = "/index.html";
     const file = Bun.file("." + path);
     if (await file.exists()) {
-      const cache = path.endsWith(".css") || path.endsWith(".html")
-        ? "no-cache, no-store, must-revalidate"
-        : "public, max-age=3600";
+      const etag = `W/"${path}-${file.lastModified}"`;
+      if (req.headers.get("If-None-Match") === etag) {
+        return new Response(null, { status: 304 });
+      }
       return new Response(file, {
-        headers: { "Cache-Control": cache },
+        headers: { ETag: etag, "Cache-Control": "no-cache" },
       });
     }
 

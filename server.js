@@ -13,6 +13,8 @@ const RATE_LIMIT = 10;
 const RATE_WINDOW = 60_000;
 const hits = new Map();
 const visitLog = new Map();
+const workflowUrl = process.env.WORKFLOW_URL;
+const workflowKey = process.env.WORKFLOW_KEY;
 
 function rateLimit(ip) {
   const now = Date.now();
@@ -34,8 +36,18 @@ function ts() {
 
 function incrementCount() {
   db.run("UPDATE counter SET value = value + 1 WHERE id = 1");
-  console.log(`${ts()} -> Logo created! Total count: ${getCount()}`);
-  return getCount();
+  const count = getCount();
+  console.log(`${ts()} -> Logo created! Total count: ${count}`);
+  notifyWorkflow();
+  return count;
+}
+
+function notifyWorkflow() {
+  if (!workflowUrl || !workflowKey) return;
+  fetch(workflowUrl, {
+    method: "GET",
+    headers: { "x-workflow-key": workflowKey },
+  }).catch(() => {});
 }
 
 function logVisit(ip) {

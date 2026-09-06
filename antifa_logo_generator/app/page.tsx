@@ -2,7 +2,7 @@ import Head from "next/head";
 import Counter from "../components/counter/Counter";
 import { Suspense } from "react";
 import CounterSkeleton from "../components/counter/CounterSkeleton";
-import Settings from "@/components/settings_pannel/Settings";
+import LogoGenerator from "@/components/LogoGenerator";
 
 export default async function Home() {
   return (
@@ -10,7 +10,7 @@ export default async function Home() {
       <Head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Antifascist Logo Generator - Create Curstom Antifa SVG</title>
+        <title>Antifascist Logo Generator - Create Custom Antifa SVG</title>
         <meta
           name="description"
           content="Use this Antifascist Logo Generator to create a custom antifa SVG logo online. Add your text, upload an image, adjust colors and layout, then download."
@@ -53,27 +53,14 @@ export default async function Home() {
           name="twitter:image"
           content="https://antifalogogenerator.noandelatouche.dev/og-image.png"
         />
-        {/* <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "WebApplication",
-        "name": "Antifascist Logo Generator",
-        "url": "https://antifalogogenerator.noandelatouche.dev/",
-        "description": "Online tool to create custom antifascist logos. Add text on an arc, upload a central image, adjust layout, and download as SVG.",
-        "applicationCategory": "Multimedia",
-        "operatingSystem": "All",
-        "browserRequirements": "Requires JavaScript"
-      }
-    </script> */}
 
-        <link rel="stylesheet" href="style.css" />
         <link rel="icon" type="image/x-icon" href="favicon.ico" />
       </Head>
       <main>
         <Suspense fallback={<CounterSkeleton />}>
           <Counter />
         </Suspense>
-        <Settings />
+        <LogoGenerator />
       </main>
     </div>
   );

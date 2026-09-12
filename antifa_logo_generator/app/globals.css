@@ -1,205 +1,205 @@
 @import "tailwindcss";
 
 :root {
-    --background: #1a1a1a;
-    --foreground: #eee;
-    --red: #cc0000;
-    --grey: #888;
-    --darkgrey: #2a2a2a;
-    --half-darkgrey: #444;
+  --background: #1a1a1a;
+  --foreground: #eee;
+  --red: #cc0000;
+  --grey: #888;
+  --darkgrey: #2a2a2a;
+  --half-darkgrey: #444;
 }
 @theme inline {
-    --color-background: var(--background);
-    --color-foreground: var(--foreground);
-    --color-red: var(--red);
-    --color-grey: var(--grey);
-    --color-darkgrey: var(--darkgrey);
-    --color-half-darkgrey: var(--half-darkgrey);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-red: var(--red);
+  --color-grey: var(--grey);
+  --color-darkgrey: var(--darkgrey);
+  --color-half-darkgrey: var(--half-darkgrey);
 }
 
 html {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    line-height: normal;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  line-height: normal;
 }
 
 body {
-    background: var(--background);
-    color: var(--foreground);
-    font-family:
-        system-ui,
-        -apple-system,
-        sans-serif;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 2rem;
+  background: var(--background);
+  color: var(--foreground);
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
 }
 
 .field {
-    margin-bottom: 1rem;
+  margin-bottom: 1rem;
 }
 
 label {
-    display: block;
-    font-size: 0.85rem;
-    color: #aaa;
-    margin-bottom: 0.25rem;
+  display: block;
+  font-size: 0.85rem;
+  color: #aaa;
+  margin-bottom: 0.25rem;
 }
 
 .image_settings h3,
 .text_settings h3 {
-    font-weight: 900;
-    margin-bottom: 1rem;
+  font-weight: 900;
+  margin-bottom: 1rem;
 }
 
 .note {
-    font-size: 0.75rem;
-    color: #888;
-    margin-top: 0.3rem;
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: 0.3rem;
 }
 
 .counter {
-    font-size: 0.8rem;
-    color: #888;
-    text-align: center;
-    margin-top: -0.5rem;
-    margin-bottom: 1rem;
+  font-size: 0.8rem;
+  color: #888;
+  text-align: center;
+  margin-top: -0.5rem;
+  margin-bottom: 1rem;
 }
 
 .container {
-    max-width: 1100px;
-    width: 100%;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
+  max-width: 1100px;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
 }
 .panel {
-    background: var(--darkgrey);
-    border-radius: 12px;
-    padding: 1.5rem;
-    border: 1px solid var(--half-darkgrey);
+  background: var(--darkgrey);
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid var(--half-darkgrey);
 }
 
 .about {
-    margin-bottom: 1.25rem;
-    background: #222;
-    border: 1px solid var(--half-darkgrey);
-    border-radius: 8px;
-    padding: 0.75rem;
+  margin-bottom: 1.25rem;
+  background: #222;
+  border: 1px solid var(--half-darkgrey);
+  border-radius: 8px;
+  padding: 0.75rem;
 }
 .about summary {
-    cursor: pointer;
-    font-weight: 600;
-    color: var(--red);
-    font-size: 0.85rem;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--red);
+  font-size: 0.85rem;
 }
 .about p {
-    font-size: 0.82rem;
-    line-height: 1.6;
-    color: #aaa;
-    margin-top: 0.75rem;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: #aaa;
+  margin-top: 0.75rem;
 }
 .about a,
 .howto a {
-    color: var(--red);
+  color: var(--red);
 }
 .about strong,
 .howto strong {
-    color: #ddd;
+  color: #ddd;
 }
 
 input {
-    width: 100%;
-    padding: 0.6rem 0.75rem;
-    background: #1a1a1a;
-    border: 1px solid #555;
-    border-radius: 6px;
-    color: #eee;
-    font-size: 0.9rem;
-    line-height: normal;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  background: #1a1a1a;
+  border: 1px solid #555;
+  border-radius: 6px;
+  color: #eee;
+  font-size: 0.9rem;
+  line-height: normal;
 }
 input:focus {
-    outline: none;
-    border-color: var(--red);
+  outline: none;
+  border-color: var(--red);
 }
 input[type="file"] {
-    padding: 0.4rem;
+  padding: 0.4rem;
 }
 
 .file-upload {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4rem;
-    padding: 1.25rem 1rem;
-    border: 2px dashed #555;
-    border-radius: 8px;
-    background: #1a1a1a;
-    cursor: pointer;
-    transition:
-        border-color 0.2s,
-        background 0.2s;
-    text-align: center;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 1.25rem 1rem;
+  border: 2px dashed #555;
+  border-radius: 8px;
+  background: #1a1a1a;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+  text-align: center;
 }
 
 .file-upload:hover {
-    border-color: var(--red);
-    background: #1f1f1f;
+  border-color: var(--red);
+  background: #1f1f1f;
 }
 
 .file-upload input[type="file"] {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    cursor: pointer;
-    padding: 0;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  padding: 0;
 }
 
 .file-upload-icon {
-    font-size: 1.5rem;
-    line-height: 1;
-    color: #666;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: #666;
 }
 
 .file-upload:hover .file-upload-icon {
-    color: var(--red);
+  color: var(--red);
 }
 
 .file-upload-text {
-    font-size: 0.82rem;
-    color: #888;
+  font-size: 0.82rem;
+  color: #888;
 }
 
 .file-upload-text strong {
-    color: var(--red);
+  color: var(--red);
 }
 
 .file-upload-name {
-    font-size: 0.75rem;
-    color: #ccc;
-    margin-top: 0.2rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 100%;
+  font-size: 0.75rem;
+  color: #ccc;
+  margin-top: 0.2rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
 }
 input[type="range"] {
-    padding: 0;
-    accent-color: var(--red);
-    height: 6px;
+  padding: 0;
+  accent-color: var(--red);
+  height: 6px;
 }
 
 .val {
-    font-size: 0.85rem;
-    color: #ccc;
-    font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+  color: #ccc;
+  font-variant-numeric: tabular-nums;
 }
 
 hr {
@@ -305,4 +305,116 @@ textarea {
   line-height: 1.6;
   color: #aaa;
   margin-bottom: 0.5rem;
+}
+
+main {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.preview-box svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+@media (max-width: 900px) {
+  body {
+    padding: 1rem;
+  }
+  .container {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  /* 16px+ prevents iOS auto-zoom on focus */
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+  input[type="range"] {
+    min-height: 32px;
+  }
+  .actions button {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  .actions {
+    flex-direction: column;
+  }
+  textarea {
+    min-height: 140px;
+  }
+}
+
+.footer-quote {
+  font-style: italic;
+  font-size: 0.75rem;
+  color: #666;
+  max-width: 400px;
+}
+.footer-quote .q {
+  color: #cc0000;
+  font-style: normal;
+  font-size: 1rem;
+}
+.footer-quote .attr {
+  display: block;
+  font-style: normal;
+  font-size: 0.7rem;
+  color: #555;
+  margin-top: 2px;
+}
+.footer-links {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+}
+
+footer {
+  display: grid;
+  gap: 2rem;
+  text-align: center;
+  margin-top: 2rem;
+  font-size: 0.8rem;
+  color: #555;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+footer a {
+  color: #777;
+  text-decoration: none;
+}
+footer a:hover {
+  color: #ccc;
+}
+
+.cgu {
+  max-width: 720px;
+  margin: 0 auto;
+}
+.cgu h2 {
+  margin-top: 1.5rem;
+}
+.cgu p,
+.cgu ul {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #bbb;
+  margin-top: 0.4rem;
+}
+.cgu ul {
+  padding-left: 1.25rem;
+}
+.cgu li {
+  margin-bottom: 0.3rem;
 }

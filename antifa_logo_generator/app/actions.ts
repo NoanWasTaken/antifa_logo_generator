@@ -6,15 +6,17 @@ import { revalidatePath } from "next/cache";
 const workflowUrl = process.env.WORKFLOW_URL;
 const workflowKey = process.env.WORKFLOW_KEY;
 
-function notifyWorkflow() {
+async function notifyWorkflow() {
   if (!workflowKey || !workflowUrl) return;
   fetch(workflowUrl, {
     method: "GET",
     headers: { "x-workflow-key": workflowKey },
-  }).catch(() => {});
+  }).catch((err) => {
+    console.error("Failed forkflow in background : ", err);
+  });
 }
 
-export function handleIncrement() {
+export async function handleIncrement() {
   const newCount = incrementCount();
 
   notifyWorkflow();

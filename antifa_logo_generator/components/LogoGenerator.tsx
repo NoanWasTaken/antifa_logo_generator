@@ -13,6 +13,7 @@ export interface LogoSettings {
   posY: number;
   fontSize: number;
   logoFile: File | null;
+  customLogoColorEnabled: boolean;
 }
 
 const initialSettings: LogoSettings = {
@@ -24,6 +25,7 @@ const initialSettings: LogoSettings = {
   posY: 0,
   fontSize: 40,
   logoFile: null,
+  customLogoColorEnabled: false,
 };
 
 export default function LogoGenerator() {

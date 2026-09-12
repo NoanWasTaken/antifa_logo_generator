@@ -10,10 +10,16 @@ interface SettingsProps {
 
 export default function Settings({ settings, onChange }: SettingsProps) {
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type } = e.target;
+    const { name, value, type, checked } = e.target;
+
     onChange((prev) => ({
       ...prev,
-      [name]: type === "range" || type === "number" ? Number(value) : value,
+      [name]:
+        type === "checkbox"
+          ? checked
+          : type === "range" || type === "number"
+            ? Number(value)
+            : value,
     }));
   };
 
@@ -196,83 +202,120 @@ export default function Settings({ settings, onChange }: SettingsProps) {
               Drop a file or <strong>browse</strong>
             </span>
           </div>
-          <div className="note">
-            Replaces the flags. The image is split red/black. Transparent
-            background recommended.
+          <div className="note mb-4">
+            Replaces the flags. Transparent background recommended.
+          </div>
+          <div>
+            {settings.logoFile && (
+              <div className="field">
+                <label htmlFor="customLogoColorEnabled">
+                  Use red/black color template ?{" "}
+                </label>
+
+                <label
+                  className="relative h-8 w-12 cursor-pointer [-webkit-tap-highlight-color:transparent]"
+                  htmlFor="customLogoColorEnabled"
+                >
+                  <input
+                    className="peer sr-only"
+                    id="customLogoColorEnabled"
+                    type="checkbox"
+                    onChange={handleChange}
+                    name="customLogoColorEnabled"
+                    checked={settings.customLogoColorEnabled}
+                  />
+
+                  <span
+                    className={`absolute inset-0 m-auto h-2 transition duration-250 rounded-full ${!settings.customLogoColorEnabled ? "bg-[#1a1a1a]" : "bg-red"}`}
+                  ></span>
+
+                  <span className="absolute inset-y-0 inset-s-0 m-auto size-6 rounded-full bg-stone-600 transition-all peer-checked:inset-s-6 peer-checked:[&amp;_>_*]:scale-0">
+                    <span
+                      className={`absolute inset-0 m-auto size-4 rounded-full ${!settings.customLogoColorEnabled ? "bg-[#1a1a1a]" : "bg-red"} transition`}
+                    ></span>
+                  </span>
+                </label>
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="field">
-          <label>
-            Red/black split
-            <span className="val" id="splitLabel">
-              {" " + settings.rbSplit}%
-            </span>
-          </label>
-          <input
-            type="range"
-            id="splitPos"
-            min="0"
-            max="100"
-            value={settings.rbSplit}
-            onChange={handleChange}
-            name="rbSplit"
-          />
-        </div>
+        {settings.customLogoColorEnabled && settings.logoFile && (
+          <div className="field">
+            <label>
+              Red/black split
+              <span className="val" id="splitLabel">
+                {" " + settings.rbSplit}%
+              </span>
+            </label>
+            <input
+              type="range"
+              id="splitPos"
+              min="0"
+              max="100"
+              value={settings.rbSplit}
+              onChange={handleChange}
+              name="rbSplit"
+            />
+          </div>
+        )}
+        {settings.logoFile && (
+          <div>
+            <div className="field">
+              <label>
+                Logo scale{" "}
+                <span className="val" id="logoSzLabel">
+                  {" " + settings.scale}%
+                </span>
+              </label>
+              <input
+                type="range"
+                id="logoSz"
+                min="30"
+                max="150"
+                value={settings.scale}
+                onChange={handleChange}
+                name="scale"
+              />
+            </div>
 
-        <div className="field">
-          <label>
-            Logo scale{" "}
-            <span className="val" id="logoSzLabel">
-              {" " + settings.scale}%
-            </span>
-          </label>
-          <input
-            type="range"
-            id="logoSz"
-            min="30"
-            max="150"
-            value={settings.scale}
-            onChange={handleChange}
-            name="scale"
-          />
-        </div>
+            <div className="field">
+              <label>
+                Logo position X{" "}
+                <span className="val" id="logoXLabel">
+                  {" " + settings.posX}
+                </span>
+              </label>
+              <input
+                type="range"
+                id="logoX"
+                min="-100"
+                max="100"
+                value={settings.posX}
+                onChange={handleChange}
+                name="posX"
+              />
+            </div>
 
-        <div className="field">
-          <label>
-            Logo position X{" "}
-            <span className="val" id="logoXLabel">
-              {" " + settings.posX}
-            </span>
-          </label>
-          <input
-            type="range"
-            id="logoX"
-            min="-100"
-            max="100"
-            value={settings.posX}
-            onChange={handleChange}
-            name="posX"
-          />
-        </div>
-
-        <div className="field">
-          <label>
-            Logo position Y{" "}
-            <span className="val" id="logoYLabel">
-              {" " + settings.posY}
-            </span>
-          </label>
-          <input
-            type="range"
-            id="logoY"
-            min="-100"
-            max="100"
-            value={settings.posY}
-            onChange={handleChange}
-            name="posY"
-          />
-        </div>
+            <div className="field">
+              <label>
+                Logo position Y{" "}
+                <span className="val" id="logoYLabel">
+                  {" " + settings.posY}
+                </span>
+              </label>
+              <input
+                type="range"
+                id="logoY"
+                min="-100"
+                max="100"
+                value={settings.posY}
+                onChange={handleChange}
+                name="posY"
+              />
+            </div>
+          </div>
+        )}
       </div>
       <hr />
       <div className="text_settings">
@@ -294,7 +337,6 @@ export default function Settings({ settings, onChange }: SettingsProps) {
             name="fontSize"
           />
         </div>
-
       </div>
       <hr />
     </div>

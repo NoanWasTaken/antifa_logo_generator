@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import * as opentype from "opentype.js";
 import type { LogoSettings } from "../LogoGenerator";
+import { handleIncrement } from "@/app/actions";
 
 const FLAG_RED_PATH =
   "M125.667,122.917c0,0,28,33.083,89.25,34.333c61.251,1.25,95.917-37.917,130.917-33.333s63,43.333,77.75,50.167L333,425.75c0,0-1.833,1.334-11,4.667s-11.333,4.333-11.333,4.333l40.25-122.917c0,0-38.75-32.687-73.75-35c-35.001-2.313-50.917,23.75-110.083,13.75C107.917,280.583,69.5,243.5,69.5,243.5s-1.415-21.067,14.5-59.833C99.914,144.902,125.667,122.917,125.667,122.917z";
@@ -12,22 +13,37 @@ const FLAG_BLACK_PATH =
 const SVG_SIZE = 500;
 const SVG_CENTER = SVG_SIZE / 2;
 const MAX_IMAGE_DIMENSION = 1024;
-const TOP_ARC_RADIUS = 210;
-const BOTTOM_ARC_RADIUS = 240;
+
+const RING_RADIUS = 225;
 const FONT_URL =
   "https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.20/files/inter-latin-700-normal.woff";
+function getCapCenterOffset(font: opentype.Font, fontSize: number): number {
+  try {
+    const box = font.charToGlyph("H").getPath(0, 0, fontSize).getBoundingBox();
+    if (!isFinite(box.y1) || !isFinite(box.y2)) throw new Error("bad bbox");
+    return (box.y1 + box.y2) / 2;
+  } catch {
+    return -fontSize * 0.35;
+  }
+}
+
 function buildGlyphsOnArc(
   font: opentype.Font,
   text: string,
   isTopArc: boolean,
   fontSize: number,
-  arcRadius: number,
+  ringRadius: number,
 ): string {
   if (!text) return "";
 
   const glyphScale = fontSize / font.unitsPerEm;
   const arcDirection = isTopArc ? 1 : -1;
   const startAngle = isTopArc ? -Math.PI / 2 : Math.PI / 2;
+
+  const capCenter = getCapCenterOffset(font, fontSize);
+  const baselineRadius = isTopArc
+    ? ringRadius + capCenter
+    : ringRadius - capCenter;
 
   const glyphs = [...text].map((char) => font.charToGlyph(char));
   const totalTextWidth = glyphs.reduce(
@@ -41,9 +57,9 @@ function buildGlyphsOnArc(
   for (const glyph of glyphs) {
     const glyphWidth = (glyph.advanceWidth || 500) * glyphScale;
     const glyphCenter = cursorOffset + glyphWidth / 2;
-    const angle = startAngle + arcDirection * (glyphCenter / arcRadius);
-    const x = SVG_CENTER + arcRadius * Math.cos(angle);
-    const y = SVG_CENTER + arcRadius * Math.sin(angle);
+    const angle = startAngle + arcDirection * (glyphCenter / ringRadius);
+    const x = SVG_CENTER + baselineRadius * Math.cos(angle);
+    const y = SVG_CENTER + baselineRadius * Math.sin(angle);
     const rotationDegrees = (angle * 180) / Math.PI + arcDirection * 90;
 
     const pathData = glyph.getPath(0, 0, fontSize).toPathData(2);
@@ -90,6 +106,7 @@ function applyRedBlackSplit(
 function processUploadedImage(
   dataURL: string,
   splitPercentage: number,
+  customLogoColorEnabled: boolean,
 ): Promise<string> {
   return new Promise((resolve) => {
     const img = new Image();
@@ -119,7 +136,9 @@ function processUploadedImage(
       ctx.drawImage(img, 0, 0, width, height);
 
       const imageData = ctx.getImageData(0, 0, width, height);
-      applyRedBlackSplit(imageData, splitPercentage);
+      if (customLogoColorEnabled) {
+        applyRedBlackSplit(imageData, splitPercentage);
+      }
       ctx.putImageData(imageData, 0, 0);
 
       resolve(canvas.toDataURL("image/png"));
@@ -145,7 +164,7 @@ function buildSVG(
         settings.topText,
         true,
         settings.fontSize,
-        TOP_ARC_RADIUS,
+        RING_RADIUS,
       )
     : "";
   const bottomTextPaths = font
@@ -154,7 +173,7 @@ function buildSVG(
         settings.bottomText,
         false,
         settings.fontSize,
-        BOTTOM_ARC_RADIUS,
+        RING_RADIUS,
       )
     : "";
   const gridOverlay = showGrid ? buildGridOverlay() : "";
@@ -195,7 +214,6 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
   const [fontError, setFontError] = useState("");
   const [showGrid, setShowGrid] = useState(false);
   const [logoDataURL, setLogoDataURL] = useState<string | null>(null);
-  const [svgCode, setSvgCode] = useState("");
   const [copied, setCopied] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
 
@@ -206,10 +224,12 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
       .catch((error) => setFontError("Could not load font: " + error));
   }, []);
 
-  const processLogoFile = useCallback(
-    async (file: File | null) => {
+  useEffect(() => {
+    const file = settings.logoFile;
+    let cancelled = false;
+    (async () => {
       if (!file) {
-        setLogoDataURL(null);
+        if (!cancelled) setLogoDataURL(null);
         return;
       }
       const dataURL = await new Promise<string>((resolve) => {
@@ -217,40 +237,47 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
         reader.onload = (e) => resolve(e.target!.result as string);
         reader.readAsDataURL(file);
       });
-      const processed = await processUploadedImage(dataURL, settings.rbSplit);
-      setLogoDataURL(processed);
-    },
-    [settings.rbSplit],
+      const processed = await processUploadedImage(
+        dataURL,
+        settings.rbSplit,
+        settings.customLogoColorEnabled,
+      );
+      if (!cancelled) setLogoDataURL(processed);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [settings.logoFile, settings.rbSplit, settings.customLogoColorEnabled]);
+
+  const svgCode = useMemo(
+    () => buildSVG(font, settings, logoDataURL, showGrid),
+    [font, settings, logoDataURL, showGrid],
   );
 
   useEffect(() => {
-    processLogoFile(settings.logoFile);
-  }, [settings.logoFile, processLogoFile]);
-
-  useEffect(() => {
-    const svg = buildSVG(font, settings, logoDataURL, showGrid);
-    setSvgCode(svg);
     if (previewRef.current) {
-      previewRef.current.innerHTML = svg;
+      previewRef.current.innerHTML = svgCode;
     }
-  }, [font, settings, logoDataURL, showGrid]);
+  }, [svgCode]);
 
-  const handleDownload = useCallback(() => {
-    const blob = new Blob([svgCode], { type: "image/svg+xml" });
+  const handleDownload = () => {
+    const cleanSvg = buildSVG(font, settings, logoDataURL, false);
+    const blob = new Blob([cleanSvg], { type: "image/svg+xml" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
     link.download = "antifa_logo.svg";
     link.click();
+    handleIncrement();
     URL.revokeObjectURL(url);
-  }, [svgCode]);
+  };
 
-  const handleCopy = useCallback(() => {
+  const handleCopy = () => {
     navigator.clipboard.writeText(svgCode).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     });
-  }, [svgCode]);
+  };
 
   return (
     <div className="pannel preview-box bg-darkgrey rounded-xl p-6 border border-half-darkgrey">
@@ -277,13 +304,33 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
         </p>
       )}
 
-      <label className="grid-toggle">
-        <input
-          type="checkbox"
-          checked={showGrid}
-          onChange={(e) => setShowGrid(e.target.checked)}
-        />
-        Show alignment grid
+      <label
+        className="flex! flex-row cursor-pointer items-center gap-3 [-webkit-tap-highlight-color:transparent]"
+        htmlFor="showGrid"
+      >
+        <span className="relative block h-8 w-12 shrink-0" aria-hidden="true">
+          <input
+            id="showGrid"
+            className="peer sr-only"
+            type="checkbox"
+            onChange={(e) => {
+              setShowGrid(e.target.checked);
+            }}
+            name="showGrid"
+            checked={showGrid}
+          />
+          <span
+            className={`absolute inset-0 m-auto h-2 rounded-full transition duration-200 ${showGrid ? "bg-red" : "bg-[#1a1a1a]"}`}
+          ></span>
+          <span className="absolute inset-y-0 inset-s-0 m-auto size-6 rounded-full bg-stone-600 transition-all peer-checked:inset-s-6 peer-checked:*:scale-0 peer-focus-visible:ring-2 peer-focus-visible:ring-red">
+            <span
+              className={`absolute inset-0 m-auto size-4 rounded-full transition ${showGrid ? "bg-red" : "bg-[#1a1a1a]"}`}
+            ></span>
+          </span>
+        </span>
+        <span className="text-sm text-[#888] select-none">
+          Show alignment grid
+        </span>
       </label>
 
       <div

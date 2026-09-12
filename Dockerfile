@@ -1,13 +1,15 @@
-FROM oven/bun:1 AS builder
+FROM oven/bun:1.4.2 AS builder
 WORKDIR /app
 COPY package.json bun.lock ./
-RUN bun install
+RUN bun install --frozen-lockfile
 COPY . .
 RUN bun run build
 
-FROM oven/bun:1
+FROM oven/bun:1.4.2
 WORKDIR /app
-COPY --from=builder /app/dist ./dist
-COPY server.js package.json ./
-COPY index.html cgu.html style.css favicon.ico sitemap.xml ./
-CMD ["bun", "run", "server.js"]
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/next.config.ts ./
+EXPOSE 3000
+CMD ["bun", "run", "start"]

@@ -8,6 +8,21 @@ await mkdir(DATA_DIR, { recursive: true });
 
 export const db = new Database(`${DATA_DIR}/counter.db`);
 
+//fix for sqlite node adapter bun
+db.run("PRAGMA busy_timeout = 60000");
+db.run("PRAGMA synchronous = NORMAL");
+try {
+  db.run("PRAGMA journal_mode = WAL");
+} catch (error) {
+  if (
+    !(error instanceof Error) ||
+    (!error.message.includes("database is locked") &&
+      !(error as { code?: string }).code?.includes("SQLITE_BUSY"))
+  ) {
+    throw error;
+  }
+}
+
 db.run(
   "CREATE TABLE IF NOT EXISTS counter (id INTEGER PRIMARY KEY, value INTEGER)",
 );

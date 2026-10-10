@@ -33,6 +33,13 @@ db.run(
 );
 db.run("INSERT OR IGNORE INTO message (id, value, active) VALUES (1, '', 0)");
 
+db.run(
+  "CREATE TABLE IF NOT EXISTS logo (id INTEGER PRIMARY KEY, value TEXT, is_validated BOOLEAN)",
+);
+db.run(
+  "INSERT OR IGNORE INTO logo (id, value, is_validated) VALUES (1, '', 0)",
+);
+
 export function getCount(): number {
   const result = db.query("SELECT value FROM counter WHERE id = 1").get() as {
     value: number;
@@ -85,4 +92,12 @@ export function activateMessage(active: boolean): void {
   db.query("UPDATE message SET active = $active WHERE id = 1").run({
     $active: active,
   });
+}
+
+export function saveLogo(logoValue: string): void {
+  db.query("INSERT INTO logo (value, is_validated) VALUES ($logoValue, 0)").run(
+    {
+      $logoValue: logoValue,
+    },
+  );
 }

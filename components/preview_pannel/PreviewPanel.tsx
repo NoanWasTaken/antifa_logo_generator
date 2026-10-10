@@ -4,6 +4,16 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import * as opentype from "opentype.js";
 import type { LogoSettings } from "../LogoGenerator";
 import { handleIncrement } from "@/app/actions";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../ui/dialog";
+import { Button } from "../ui/button";
 
 const FLAG_RED_PATH =
   "M125.667,122.917c0,0,28,33.083,89.25,34.333c61.251,1.25,95.917-37.917,130.917-33.333s63,43.333,77.75,50.167L333,425.75c0,0-1.833,1.334-11,4.667s-11.333,4.333-11.333,4.333l40.25-122.917c0,0-38.75-32.687-73.75-35c-35.001-2.313-50.917,23.75-110.083,13.75C107.917,280.583,69.5,243.5,69.5,243.5s-1.415-21.067,14.5-59.833C99.914,144.902,125.667,122.917,125.667,122.917z";
@@ -215,6 +225,7 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
   const [showGrid, setShowGrid] = useState(false);
   const [logoDataURL, setLogoDataURL] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [enableSharePopup, setEnableSharePopup] = useState<boolean>(false);
   const previewRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -270,6 +281,8 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
     link.click();
     handleIncrement();
     URL.revokeObjectURL(url);
+
+    setEnableSharePopup(true);
   };
 
   const handleCopy = () => {
@@ -374,6 +387,19 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
           </li>
         </ul>
       </details>
+
+      <Dialog open={enableSharePopup} onOpenChange={setEnableSharePopup}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              Do you want to share your logo with the community ?
+            </DialogTitle>
+          </DialogHeader>
+          <DialogFooter>
+            <Button>Non</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="actions">
         <button className="btn-primary" onClick={handleDownload}>

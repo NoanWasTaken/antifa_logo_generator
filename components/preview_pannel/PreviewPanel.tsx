@@ -1,17 +1,17 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import * as opentype from "opentype.js";
 import type { LogoSettings } from "../LogoGenerator";
 import { handleIncrement } from "@/app/actions";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "../ui/dialog";
 import { Button } from "../ui/button";
 
@@ -215,6 +215,18 @@ function buildDefaultFlagsGroup(): string {
   </g>`;
 }
 
+function useSvgObjectUrl(svg: string): string {
+  const [url, setUrl] = useState("");
+  useEffect(() => {
+    const objectUrl = URL.createObjectURL(
+      new Blob([svg], { type: "image/svg+xml" }),
+    );
+    setUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [svg]);
+  return url;
+}
+
 interface PreviewPanelProps {
   settings: LogoSettings;
 }
@@ -226,7 +238,6 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
   const [logoDataURL, setLogoDataURL] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [enableSharePopup, setEnableSharePopup] = useState<boolean>(false);
-  const previewRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch(FONT_URL)
@@ -264,12 +275,12 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
     () => buildSVG(font, settings, logoDataURL, showGrid),
     [font, settings, logoDataURL, showGrid],
   );
-
-  useEffect(() => {
-    if (previewRef.current) {
-      previewRef.current.innerHTML = svgCode;
-    }
-  }, [svgCode]);
+  const dialogSvgCode = useMemo(
+    () => buildSVG(font, settings, logoDataURL, false),
+    [font, settings, logoDataURL],
+  );
+  const previewUrl = useSvgObjectUrl(svgCode);
+  const dialogUrl = useSvgObjectUrl(dialogSvgCode);
 
   const handleDownload = () => {
     const cleanSvg = buildSVG(font, settings, logoDataURL, false);
@@ -278,7 +289,7 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
     const link = document.createElement("a");
     link.href = url;
     link.download = "antifa_logo.svg";
-    link.click();
+    //link.click();
     handleIncrement();
     URL.revokeObjectURL(url);
 
@@ -347,16 +358,21 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
       </label>
 
       <div
-        ref={previewRef}
-        role="img"
-        aria-label="Antifascist logo preview"
         style={{
           maxWidth: "100%",
           borderRadius: "8px",
           background: "#fff",
           maxHeight: "500px",
         }}
-      />
+      >
+        {previewUrl && (
+          <img
+            src={previewUrl}
+            alt="Antifascist logo preview"
+            className="block h-auto w-full"
+          />
+        )}
+      </div>
 
       <details className="howto">
         <summary>How to use your logo</summary>
@@ -389,14 +405,40 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
       </details>
 
       <Dialog open={enableSharePopup} onOpenChange={setEnableSharePopup}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
               Do you want to share your logo with the community ?
             </DialogTitle>
+            <DialogDescription>
+              By sharing your logo, you will contribute to the community and
+              help others create their own antifascist logos. Your logo will be
+              added to the gallery of logos that other users can browse and use
+              as inspiration or download.
+            </DialogDescription>
+
+            <div
+              style={{
+                maxWidth: "100%",
+                borderRadius: "8px",
+                background: "#fff",
+                maxHeight: "500px",
+              }}
+            >
+              {dialogUrl && (
+                <img
+                  src={dialogUrl}
+                  alt="Antifascist logo preview"
+                  className="block h-auto w-full"
+                />
+              )}
+            </div>
           </DialogHeader>
           <DialogFooter>
-            <Button>Non</Button>
+            <Button type="submit">Yes</Button>
+            <DialogClose render={<Button type="button" variant="secondary" />}>
+              No
+            </DialogClose>
           </DialogFooter>
         </DialogContent>
       </Dialog>

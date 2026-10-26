@@ -1,7 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  experimental: {
+    // Logo submissions are validated up to 2MB
+    serverActions: {
+      bodySizeLimit: "3mb",
+    },
+  },
   turbopack: {
     root: "./",
   },

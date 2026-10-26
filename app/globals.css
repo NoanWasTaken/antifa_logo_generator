@@ -335,6 +335,26 @@ hr {
   background: #555;
 }
 
+.download-split {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+.download-split > :first-child {
+  border-radius: 6px 0 0 6px;
+}
+
+.actions .split-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 2.75rem;
+  padding: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 0 6px 6px 0;
+}
+
 textarea {
   width: 100%;
   min-height: 180px;
@@ -385,11 +405,6 @@ main {
   gap: 1rem;
 }
 
-.preview-box svg {
-  width: 100%;
-  height: auto;
-  display: block;
-}
 
 @media (max-width: 900px) {
   body {

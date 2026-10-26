@@ -2,8 +2,11 @@
 
 import { useState, useEffect, useMemo } from "react";
 import * as opentype from "opentype.js";
+import { Menu } from "@base-ui/react/menu";
+import { ChevronDown } from "lucide-react";
 import type { LogoSettings } from "../LogoGenerator";
-import { handleIncrement } from "@/app/actions";
+import { handleIncrement, submitLogo } from "@/app/actions";
+import { rasterizeSvg, triggerDownload, type DownloadFormat } from "@/lib/download";
 import {
   Dialog,
   DialogClose,
@@ -221,7 +224,7 @@ function useSvgObjectUrl(svg: string): string {
     const objectUrl = URL.createObjectURL(
       new Blob([svg], { type: "image/svg+xml" }),
     );
-    setUrl(objectUrl);
+    
     return () => URL.revokeObjectURL(objectUrl);
   }, [svg]);
   return url;
@@ -238,6 +241,11 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
   const [logoDataURL, setLogoDataURL] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [enableSharePopup, setEnableSharePopup] = useState<boolean>(false);
+  const [submissionState, setSubmissionState] = useState<
+    "idle" | "pending" | "success" | "error"
+  >("idle");
+  const [submissionError, setSubmissionError] = useState("");
+  const [logoName, setLogoName] = useState("");
 
   useEffect(() => {
     fetch(FONT_URL)
@@ -282,18 +290,42 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
   const previewUrl = useSvgObjectUrl(svgCode);
   const dialogUrl = useSvgObjectUrl(dialogSvgCode);
 
-  const handleDownload = () => {
-    const cleanSvg = buildSVG(font, settings, logoDataURL, false);
-    const blob = new Blob([cleanSvg], { type: "image/svg+xml" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "antifa_logo.svg";
-    //link.click();
-    handleIncrement();
-    URL.revokeObjectURL(url);
+  const handleDownload = async (format: DownloadFormat) => {
+    try {
+      const blob =
+        format === "svg"
+          ? new Blob([dialogSvgCode], { type: "image/svg+xml" })
+          : await rasterizeSvg(dialogSvgCode, format);
+      triggerDownload(
+        blob,
+        `antifa_logo.${format === "jpeg" ? "jpg" : format}`,
+      );
 
-    setEnableSharePopup(true);
+      handleIncrement();
+      setSubmissionState("idle");
+      setSubmissionError("");
+      setEnableSharePopup(true);
+    } catch (error) {
+      console.error("Download failed:", error);
+    }
+  };
+
+  const handleShare = async () => {
+    setSubmissionState("pending");
+    setSubmissionError("");
+    try {
+      const result = await submitLogo(dialogSvgCode, logoName);
+      if (result.ok) {
+        setSubmissionState("success");
+      } else {
+        setSubmissionError(result.error);
+        setSubmissionState("error");
+      }
+    } catch (error) {
+      console.error("Logo submission failed:", error);
+      setSubmissionError("Something went wrong. Please try again.");
+      setSubmissionState("error");
+    }
   };
 
   const handleCopy = () => {
@@ -388,7 +420,7 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
             legible even as a small avatar.
           </li>
           <li>
-            <strong>Flyers &amp; posters</strong> - Download the SVG and place
+            <strong>Flyers &amp; posters</strong> - Download the logo and place
             it on your flyer layout. The vector format scales to any size
             without losing quality.
           </li>
@@ -414,7 +446,10 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
               By sharing your logo, you will contribute to the community and
               help others create their own antifascist logos. Your logo will be
               added to the gallery of logos that other users can browse and use
-              as inspiration or download.
+              as inspiration or download.{" "}
+              <span className="font-bold text-red">
+                Your logo will be reviewed before being added to the gallery.
+              </span>
             </DialogDescription>
 
             <div
@@ -433,20 +468,83 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
                 />
               )}
             </div>
+
+            <label className="flex flex-col gap-1 text-left text-sm text-[#aaa]">
+              Logo name (optional)
+              <input
+                type="text"
+                value={logoName}
+                onChange={(event) => setLogoName(event.target.value)}
+                maxLength={60}
+                placeholder="e.g. Antifascist ant"
+                className="w-full rounded-md border border-half-darkgrey bg-[#1a1a1a] px-3 py-2 text-sm text-white placeholder:text-grey focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              />
+              <span className="text-xs text-grey">
+                Helps people find your logo in the gallery search.
+              </span>
+            </label>
+
+            {submissionState === "success" && (
+              <p role="status" className="text-sm text-green-400">
+                Submitted for review. Thank you!
+              </p>
+            )}
+            {submissionState === "error" && (
+              <p role="alert" className="text-sm text-red-300">
+                {submissionError}
+              </p>
+            )}
           </DialogHeader>
           <DialogFooter>
-            <Button type="submit">Yes</Button>
+            <Button
+              type="button"
+              onClick={handleShare}
+              disabled={
+                submissionState === "pending" || submissionState === "success"
+              }
+            >
+              {submissionState === "pending" ? "Submitting…" : "Yes"}
+            </Button>
             <DialogClose render={<Button type="button" variant="secondary" />}>
-              No
+              {submissionState === "success" ? "Close" : "No"}
             </DialogClose>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <div className="actions">
-        <button className="btn-primary" onClick={handleDownload}>
-          Download SVG
-        </button>
+        <div className="download-split">
+          <button className="btn-primary" onClick={() => handleDownload("png")}>
+            Download PNG
+          </button>
+          <Menu.Root>
+            <Menu.Trigger
+              className="btn-primary split-trigger"
+              aria-label="Choose download format"
+            >
+              <ChevronDown className="size-4" />
+            </Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner
+                align="end"
+                sideOffset={4}
+                className="isolate z-50 outline-none"
+              >
+                <Menu.Popup className="min-w-36 rounded-lg bg-[#222] p-1 text-sm text-foreground shadow-md ring-1 ring-white/10 outline-none">
+                  {(["png", "svg", "jpeg"] as const).map((format) => (
+                    <Menu.Item
+                      key={format}
+                      onClick={() => handleDownload(format)}
+                      className="cursor-pointer rounded-md px-3 py-2 outline-none select-none data-highlighted:bg-[#333]"
+                    >
+                      {format.toUpperCase()}
+                    </Menu.Item>
+                  ))}
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </div>
         <button className="btn-secondary" onClick={handleCopy}>
           {copied ? "Copied!" : "Copy code"}
         </button>

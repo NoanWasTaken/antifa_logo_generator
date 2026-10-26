@@ -14,7 +14,7 @@ bun dev
 
 ## Stack
 
-- Vanilla HTML, CSS, JS
+- Next.js 16, React 19, Tailwind CSS 4
 - [opentype.js](https://github.com/opentypejs/opentype.js) for text-on-arc rendering
 
 ## License

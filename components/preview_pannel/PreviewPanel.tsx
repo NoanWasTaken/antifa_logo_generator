@@ -6,7 +6,11 @@ import { Menu } from "@base-ui/react/menu";
 import { ChevronDown } from "lucide-react";
 import type { LogoSettings } from "../LogoGenerator";
 import { handleIncrement, submitLogo } from "@/app/actions";
-import { rasterizeSvg, triggerDownload, type DownloadFormat } from "@/lib/download";
+import {
+  rasterizeSvg,
+  triggerDownload,
+  type DownloadFormat,
+} from "@/lib/download";
 import {
   Dialog,
   DialogClose,
@@ -224,7 +228,8 @@ function useSvgObjectUrl(svg: string): string {
     const objectUrl = URL.createObjectURL(
       new Blob([svg], { type: "image/svg+xml" }),
     );
-    
+    setUrl(objectUrl);
+
     return () => URL.revokeObjectURL(objectUrl);
   }, [svg]);
   return url;

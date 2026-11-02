@@ -182,15 +182,18 @@ export default async function GalleryPage({
           </section>
         ) : (
           <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {logos.map((logo) => (
-              <li key={logo.id}>
-                <GalleryCard
-                  id={logo.id}
-                  downloads={logo.downloads}
-                  name={logo.name}
-                />
-              </li>
-            ))}
+            {logos.map((logo) => {
+              console.log(logo.name);
+              return (
+                <li key={logo.id}>
+                  <GalleryCard
+                    id={logo.id}
+                    downloads={logo.downloads}
+                    name={logo.name}
+                  />
+                </li>
+              );
+            })}
           </ul>
         )}
 

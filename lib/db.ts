@@ -97,6 +97,10 @@ export function getAcceptedLogos(
   offset: number,
   search?: string,
 ): GalleryLogo[] {
+  console.log("%" + search + "%");
+  search = search ? "%" + search + "%" : undefined;
+  console.log(search);
+
   const where = search ? "AND name LIKE $search" : "";
   return db
     .query(
@@ -236,6 +240,7 @@ export function recordLogoDownload(id: number): void {
   ).run({ $id: id });
 }
 
+//TODO : add name with id when name null
 export function saveLogo(logoValue: string, name: string | null = null): void {
   db.query(
     "INSERT INTO logo (value, status, name) VALUES ($logoValue, 'waiting', $name)",

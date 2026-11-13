@@ -3,8 +3,9 @@ import "./globals.css";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 import SiteTabs from "@/components/SiteTabs";
+import MessageDisplay from "@/components/message_manager/MessageDisplay";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
   title: "Antifascist Logo Generator - Create Custom Antifa SVG",
@@ -54,12 +55,18 @@ export default function RootLayout({
     alternateName: "ALG",
   };
   return (
-    <html lang="en" className={cn("h-full antialiased", "font-sans", geist.variable)}>
+    <html
+      lang="en"
+      className={cn("h-full antialiased", "font-sans", geist.variable)}
+    >
       <body className="min-h-full flex flex-col">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+        <div className="w-full">
+          <MessageDisplay />
+        </div>
         <SiteTabs />
         {children}
       </body>

@@ -5,7 +5,11 @@ import * as opentype from "opentype.js";
 import { Menu } from "@base-ui/react/menu";
 import { ChevronDown } from "lucide-react";
 import type { LogoSettings } from "../LogoGenerator";
-import { handleIncrement, submitLogo } from "@/app/actions";
+import {
+  handleIncrement,
+  handleLogoSubmitted,
+  submitLogo,
+} from "@/app/actions";
 import {
   rasterizeSvg,
   triggerDownload,
@@ -222,17 +226,8 @@ function buildDefaultFlagsGroup(): string {
   </g>`;
 }
 
-function useSvgObjectUrl(svg: string): string {
-  const [url, setUrl] = useState("");
-  useEffect(() => {
-    const objectUrl = URL.createObjectURL(
-      new Blob([svg], { type: "image/svg+xml" }),
-    );
-    setUrl(objectUrl);
-
-    return () => URL.revokeObjectURL(objectUrl);
-  }, [svg]);
-  return url;
+function svgToDataUrl(svg: string): string {
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
 interface PreviewPanelProps {
@@ -292,8 +287,8 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
     () => buildSVG(font, settings, logoDataURL, false),
     [font, settings, logoDataURL],
   );
-  const previewUrl = useSvgObjectUrl(svgCode);
-  const dialogUrl = useSvgObjectUrl(dialogSvgCode);
+  const previewUrl = useMemo(() => svgToDataUrl(svgCode), [svgCode]);
+  const dialogUrl = useMemo(() => svgToDataUrl(dialogSvgCode), [dialogSvgCode]);
 
   const handleDownload = async (format: DownloadFormat) => {
     try {
@@ -319,9 +314,15 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
     setSubmissionState("pending");
     setSubmissionError("");
     try {
-      const result = await submitLogo(dialogSvgCode, logoName);
+      const result = await submitLogo(
+        dialogSvgCode,
+        logoName,
+        settings.topText,
+        settings.bottomText,
+      );
       if (result.ok) {
         setSubmissionState("success");
+        handleLogoSubmitted(dialogSvgCode);
       } else {
         setSubmissionError(result.error);
         setSubmissionState("error");
@@ -485,7 +486,8 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
                 className="w-full rounded-md border border-half-darkgrey bg-[#1a1a1a] px-3 py-2 text-sm text-white placeholder:text-grey focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               />
               <span className="text-xs text-grey">
-                Helps people find your logo in the gallery search.
+                Helps people find your logo in the gallery search. Leave empty
+                to use your top and bottom text instead.
               </span>
             </label>
 

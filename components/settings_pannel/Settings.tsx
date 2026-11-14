@@ -1,7 +1,9 @@
 "use client";
 
-import { ChangeEvent } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import type { LogoSettings } from "../LogoGenerator";
+import Croppie from "croppie";
+import "croppie/croppie.css";
 
 interface SettingsProps {
   settings: LogoSettings;
@@ -23,9 +25,40 @@ export default function Settings({ settings, onChange }: SettingsProps) {
     }));
   };
 
+  const croppieRef = useRef<HTMLDivElement>(null);
+  const croppieInstance = useRef<Croppie | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!croppieRef.current || !previewUrl) return;
+    if (!croppieInstance.current) {
+      croppieInstance.current = new Croppie(croppieRef.current, {
+        showZoomer: true,
+        enableOrientation: true,
+        mouseWheelZoom: true,
+        viewport: { width: 500, height: 500, type: "circle" },
+        boundary: { width: 500, height: 500 },
+      });
+    }
+    croppieInstance.current
+      .bind({ url: previewUrl })
+      .then(() => URL.revokeObjectURL(previewUrl));
+  }, [previewUrl]);
+
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
+    if (!file) return;
+    setPreviewUrl(URL.createObjectURL(file));
     onChange((prev) => ({ ...prev, logoFile: file }));
+  };
+
+  const handleCrop = async () => {
+    if (!croppieInstance.current) return;
+    const blob = await croppieInstance.current.result({ type: "blob" });
+    onChange((prev) => ({
+      ...prev,
+      logoFile: new File([blob], prev.logoFile?.name ?? "logo.png"),
+    }));
   };
 
   return (
@@ -208,6 +241,15 @@ export default function Settings({ settings, onChange }: SettingsProps) {
           <div>
             {settings.logoFile && (
               <div className="field">
+                {previewUrl && (
+                  <div className="field">
+                    <div ref={croppieRef} />
+
+                    <button type="button" onClick={handleCrop}>
+                      Apply crop
+                    </button>
+                  </div>
+                )}
                 <label htmlFor="customLogoColorEnabled">
                   Use red/black color template ?{" "}
                 </label>

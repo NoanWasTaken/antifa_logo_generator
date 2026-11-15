@@ -39,13 +39,14 @@ export default function Settings({ settings, onChange }: SettingsProps) {
   const [croppieEl, setCroppieEl] = useState<HTMLDivElement | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [showCrop, setShowCrop] = useState(false);
+  const [cropSettled, setCropSettled] = useState(false);
   const [cropReady, setCropReady] = useState(false);
 
   useEffect(() => {
-    if (!showCrop || !croppieEl || !previewUrl) return;
+    if (!showCrop || !cropSettled || !croppieEl || !previewUrl) return;
 
     // Croppie is destroyed with the dialog, so it is recreated on every open.
-    const size = Math.min(360, window.innerWidth - 96);
+    const size = Math.min(400, window.innerWidth - 96);
     const croppie = new Croppie(croppieEl, {
       showZoomer: true,
       enableOrientation: true,
@@ -64,7 +65,7 @@ export default function Settings({ settings, onChange }: SettingsProps) {
       croppie.destroy();
       croppieInstance.current = null;
     };
-  }, [showCrop, croppieEl, previewUrl]);
+  }, [showCrop, cropSettled, croppieEl, previewUrl]);
 
   useEffect(() => {
     return () => {
@@ -87,7 +88,7 @@ export default function Settings({ settings, onChange }: SettingsProps) {
       type: "blob",
       format: "png",
       circle: true,
-      size: { width:600, height: 600 },
+      size: { width: 512, height: 512 },
     });
     const name = settings.logoFile?.name ?? "logo.png";
     onChange((prev) => ({
@@ -279,8 +280,12 @@ export default function Settings({ settings, onChange }: SettingsProps) {
           <div>
             {settings.logoFile && (
               <div className="field">
-                <Dialog open={showCrop} onOpenChange={setShowCrop}>
-                  <DialogContent className="sm:max-w-md">
+                <Dialog
+                  open={showCrop}
+                  onOpenChange={setShowCrop}
+                  onOpenChangeComplete={setCropSettled}
+                >
+                  <DialogContent className="sm:max-w-xl">
                     <DialogHeader>
                       <DialogTitle>Crop your image</DialogTitle>
                       <DialogDescription>

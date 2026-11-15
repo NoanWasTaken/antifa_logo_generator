@@ -4,6 +4,16 @@ import { ChangeEvent, useEffect, useRef, useState } from "react";
 import type { LogoSettings } from "../LogoGenerator";
 import Croppie from "croppie";
 import "croppie/croppie.css";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import { Button } from "../ui/button";
 
 interface SettingsProps {
   settings: LogoSettings;
@@ -25,40 +35,68 @@ export default function Settings({ settings, onChange }: SettingsProps) {
     }));
   };
 
-  const croppieRef = useRef<HTMLDivElement>(null);
   const croppieInstance = useRef<Croppie | null>(null);
+  const [croppieEl, setCroppieEl] = useState<HTMLDivElement | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [showCrop, setShowCrop] = useState(false);
+  const [cropReady, setCropReady] = useState(false);
 
   useEffect(() => {
-    if (!croppieRef.current || !previewUrl) return;
-    if (!croppieInstance.current) {
-      croppieInstance.current = new Croppie(croppieRef.current, {
-        showZoomer: true,
-        enableOrientation: true,
-        mouseWheelZoom: true,
-        viewport: { width: 500, height: 500, type: "circle" },
-        boundary: { width: 500, height: 500 },
-      });
-    }
-    croppieInstance.current
-      .bind({ url: previewUrl })
-      .then(() => URL.revokeObjectURL(previewUrl));
+    if (!showCrop || !croppieEl || !previewUrl) return;
+
+    // Croppie is destroyed with the dialog, so it is recreated on every open.
+    const size = Math.min(360, window.innerWidth - 96);
+    const croppie = new Croppie(croppieEl, {
+      showZoomer: true,
+      enableOrientation: true,
+      mouseWheelZoom: true,
+      viewport: { width: size, height: size, type: "circle" },
+      boundary: { width: size, height: size },
+    });
+    croppieInstance.current = croppie;
+    let cancelled = false;
+    void croppie.bind({ url: previewUrl }).then(() => {
+      if (!cancelled) setCropReady(true);
+    });
+
+    return () => {
+      cancelled = true;
+      croppie.destroy();
+      croppieInstance.current = null;
+    };
+  }, [showCrop, croppieEl, previewUrl]);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
   }, [previewUrl]);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
     if (!file) return;
     setPreviewUrl(URL.createObjectURL(file));
+    setCropReady(false);
+    setShowCrop(true);
     onChange((prev) => ({ ...prev, logoFile: file }));
   };
 
   const handleCrop = async () => {
     if (!croppieInstance.current) return;
-    const blob = await croppieInstance.current.result({ type: "blob" });
+    const blob = await croppieInstance.current.result({
+      type: "blob",
+      format: "png",
+      circle: true,
+      size: { width:600, height: 600 },
+    });
+    const name = settings.logoFile?.name ?? "logo.png";
     onChange((prev) => ({
       ...prev,
-      logoFile: new File([blob], prev.logoFile?.name ?? "logo.png"),
+      logoFile: new File([blob], `${name.replace(/\.[^.]+$/, "")}.png`, {
+        type: "image/png",
+      }),
     }));
+    setShowCrop(false);
   };
 
   return (
@@ -241,15 +279,48 @@ export default function Settings({ settings, onChange }: SettingsProps) {
           <div>
             {settings.logoFile && (
               <div className="field">
-                {previewUrl && (
-                  <div className="field">
-                    <div ref={croppieRef} />
+                <Dialog open={showCrop} onOpenChange={setShowCrop}>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Crop your image</DialogTitle>
+                      <DialogDescription>
+                        Drag the image to position it and use the slider to
+                        zoom. The logo is displayed in a circle.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="field">
+                      <div ref={setCroppieEl} />
+                    </div>
+                    <DialogFooter>
+                      <DialogClose
+                        render={<Button type="button" variant="secondary" />}
+                      >
+                        Cancel
+                      </DialogClose>
+                      <Button
+                        type="button"
+                        onClick={handleCrop}
+                        disabled={!cropReady}
+                      >
+                        Apply crop
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
 
-                    <button type="button" onClick={handleCrop}>
-                      Apply crop
-                    </button>
-                  </div>
-                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mb-4"
+                  onClick={() => {
+                    setCropReady(false);
+                    setShowCrop(true);
+                  }}
+                >
+                  Crop image
+                </Button>
+
                 <label htmlFor="customLogoColorEnabled">
                   Use red/black color template ?{" "}
                 </label>

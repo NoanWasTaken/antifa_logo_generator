@@ -214,10 +214,14 @@ function buildLogoImageGroup(
   settings: LogoSettings,
 ): string {
   const scaleFactor = settings.scale / 100;
-  return `<g transform="translate(${settings.posX},${settings.posY}) translate(256,256) scale(${scaleFactor}) translate(-256,-256)">
-    <image href="${logoDataURL}" width="512" height="512" preserveAspectRatio="xMidYMid meet"/>
+  const size = 402;
+  const inset = (512 - size) / 2 - 6; //56
+  console.log(inset * 2 + size);
+  return `<g transform="translate(${settings.posX},${settings.posY}) translate(${SVG_CENTER},${SVG_CENTER}) scale(${scaleFactor}) translate(-${SVG_CENTER},-${SVG_CENTER})">
+    <image href="${logoDataURL}" x="${inset}" y="${inset}" width="${size}" height="${size}" preserveAspectRatio="xMidYMid meet"/>
   </g>`;
 }
+//TODO : check size of zone, find why cropped image is sometimes cut (check Settings.tsx::handleCrop())
 
 function buildDefaultFlagsGroup(): string {
   return `<g transform="translate(-9,-2)">

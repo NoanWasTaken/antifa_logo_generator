@@ -177,6 +177,14 @@ export default async function AdminPage({
                         {logo.name && (
                           <p className="text-xs text-grey">#{logo.id}</p>
                         )}
+                        {logo.submittedAt && (
+                          <p className="text-xs text-grey">
+                            Submitted{" "}
+                            {new Date(logo.submittedAt).toLocaleDateString(
+                              "en-GB",
+                            )}
+                          </p>
+                        )}
                       </div>
                       <span
                         className={`inline-flex items-center rounded-md border px-2.5 py-1 text-xs font-semibold ${STATUS_STYLES[logo.status]}`}

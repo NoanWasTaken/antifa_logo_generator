@@ -1,4 +1,5 @@
 import { getLogoById, recordLogoDownload } from "@/lib/db";
+import { addCc0Metadata } from "@/lib/cc0";
 import { allowRequest } from "@/lib/rate-limit";
 
 export async function GET(
@@ -26,7 +27,7 @@ export async function GET(
     recordLogoDownload(logo.id);
   }
 
-  return new Response(logo.value, {
+  return new Response(addCc0Metadata(logo.value), {
     headers: {
       "Content-Type": "image/svg+xml; charset=utf-8",
       "Content-Security-Policy": "default-src 'none'; img-src data:",

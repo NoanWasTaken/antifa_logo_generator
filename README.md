@@ -19,4 +19,8 @@ bun dev
 
 ## License
 
+The source code is MIT-licensed. Logos generated with the tool and logos
+downloaded from the gallery are released under
+[CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/).
+
 [MIT](https://github.com/NoanWasTaken/antifa_logo_generator/edit/dev/LICENSE)

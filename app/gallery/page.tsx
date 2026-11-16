@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ImageOff } from "lucide-react";
 import Footer from "../footer";
 import GalleryCard from "@/components/gallery/GalleryCard";
+import { CC0_URL } from "@/lib/cc0";
 import {
   getAcceptedLogoCount,
   getAcceptedLogos,
@@ -91,6 +92,20 @@ export default async function GalleryPage({
             </Link>
           </div>
         </header>
+
+        <p className="text-xs leading-relaxed text-grey">
+          Logos in this gallery are contributed under the{" "}
+          <a
+            className="text-red hover:text-red-300"
+            href={CC0_URL}
+            target="_blank"
+            rel="noopener"
+          >
+            CC0 1.0 public domain dedication
+          </a>
+          : you can copy, modify, print and sell them without attribution. CC0
+          does not override third-party rights or applicable law.
+        </p>
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <nav aria-label="Sort logos" className="flex flex-wrap gap-6 text-sm">

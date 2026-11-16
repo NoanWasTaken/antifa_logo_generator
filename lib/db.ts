@@ -1,6 +1,7 @@
 // lib/db.ts
 import { Database } from "bun:sqlite";
 import { mkdir } from "node:fs/promises";
+import { TERMS_VERSION } from "./terms";
 
 const DATA_DIR = process.env.DATA_DIR || "./data";
 
@@ -39,6 +40,14 @@ export type Logo = {
   value: string;
   status: LogoStatus;
   name: string | null;
+  submittedAt: string | null;
+  termsVersion: string | null;
+};
+
+export type LogoSubmission = {
+  ip: string | null;
+  acceptedAt: string;
+  submittedAt: string;
 };
 
 db.run(
@@ -83,6 +92,40 @@ const migrateLogoName = db.transaction(() => {
   }
 });
 migrateLogoName.immediate();
+
+const migrateLogoSubmission = db.transaction(() => {
+  const logoColumns = db.query("PRAGMA table_info(logo)").all() as {
+    name: string;
+  }[];
+  const addColumn = (name: string, definition: string) => {
+    if (!logoColumns.some((column) => column.name === name)) {
+      db.run(`ALTER TABLE logo ADD COLUMN ${name} ${definition}`);
+    }
+  };
+  addColumn("submitted_at", "TEXT");
+  addColumn("ip", "TEXT");
+  addColumn("terms_version", "TEXT");
+  addColumn("accepted_at", "TEXT");
+});
+migrateLogoSubmission.immediate();
+
+db.run(
+  `CREATE TABLE IF NOT EXISTS moderation_log (
+    id INTEGER PRIMARY KEY,
+    logo_id INTEGER NOT NULL,
+    decided_at TEXT NOT NULL,
+    decision TEXT NOT NULL
+  )`,
+);
+
+try {
+  const logColumns = db.query("PRAGMA table_info(moderation_log)").all() as {
+    name: string;
+  }[];
+  if (logColumns.some((column) => column.name === "reason")) {
+    db.run("ALTER TABLE moderation_log DROP COLUMN reason");
+  }
+} catch {}
 
 export type GallerySort = "newest" | "popular";
 export type GalleryLogo = {
@@ -179,15 +222,17 @@ export function activateMessage(active: boolean): void {
 }
 
 export function getLogos(status?: LogoStatus): Logo[] {
+  const columns =
+    "id, value, status, name, submitted_at AS submittedAt, terms_version AS termsVersion";
   if (status) {
     return db
       .query(
-        "SELECT id, value, status, name FROM logo WHERE status = $status ORDER BY id DESC",
+        `SELECT ${columns} FROM logo WHERE status = $status ORDER BY id DESC`,
       )
       .all({ $status: status }) as Logo[];
   }
   return db
-    .query("SELECT id, value, status, name FROM logo ORDER BY id DESC")
+    .query(`SELECT ${columns} FROM logo ORDER BY id DESC`)
     .all() as Logo[];
 }
 
@@ -214,16 +259,29 @@ export function getLogoCounts(): Record<LogoStatus, number> {
 
 export function getLogoById(id: number): Logo | undefined {
   const logo = db
-    .query("SELECT id, value, status, name FROM logo WHERE id = $id")
+    .query(
+      "SELECT id, value, status, name, submitted_at AS submittedAt, terms_version AS termsVersion FROM logo WHERE id = $id",
+    )
     .get({ $id: id }) as Logo | null;
   return logo ?? undefined;
 }
 
 export function setLogoStatus(id: number, status: LogoStatus): void {
-  db.query("UPDATE logo SET status = $status WHERE id = $id").run({
-    $status: status,
-    $id: id,
+  const update = db.transaction(() => {
+    db.query("UPDATE logo SET status = $status WHERE id = $id").run({
+      $status: status,
+      $id: id,
+    });
+    db.query(
+      `INSERT INTO moderation_log (logo_id, decided_at, decision)
+       VALUES ($id, $decidedAt, $decision)`,
+    ).run({
+      $id: id,
+      $decidedAt: new Date().toISOString(),
+      $decision: status,
+    });
   });
+  update.immediate();
 }
 
 export function deleteLogo(id: number): void {
@@ -236,11 +294,20 @@ export function recordLogoDownload(id: number): void {
   ).run({ $id: id });
 }
 
-export function saveLogo(logoValue: string, name: string | null = null): void {
+export function saveLogo(
+  logoValue: string,
+  name: string | null,
+  submission: LogoSubmission,
+): void {
   db.query(
-    "INSERT INTO logo (value, status, name) VALUES ($logoValue, 'waiting', $name)",
+    `INSERT INTO logo (value, status, name, submitted_at, ip, terms_version, accepted_at)
+     VALUES ($logoValue, 'waiting', $name, $submittedAt, $ip, $termsVersion, $acceptedAt)`,
   ).run({
     $logoValue: logoValue,
     $name: name,
+    $submittedAt: submission.submittedAt,
+    $ip: submission.ip,
+    $termsVersion: TERMS_VERSION,
+    $acceptedAt: submission.acceptedAt,
   });
 }

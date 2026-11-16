@@ -266,6 +266,16 @@ input[type="range"] {
   height: 6px;
 }
 
+.share-checkbox {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+  padding: 0;
+  accent-color: var(--red);
+  cursor: pointer;
+}
+
 .val {
   font-size: 0.85rem;
   color: #ccc;
@@ -405,7 +415,6 @@ main {
   gap: 1rem;
 }
 
-
 @media (max-width: 900px) {
   body {
     padding: 1rem;
@@ -445,6 +454,7 @@ main {
   font-size: 0.75rem;
   color: #666;
   max-width: 400px;
+  margin: 0 auto;
 }
 .footer-quote .q {
   color: #cc0000;
@@ -460,8 +470,10 @@ main {
 }
 .footer-links {
   display: flex;
-  gap: 2rem;
+  flex-wrap: wrap;
+  gap: 0.75rem 2rem;
   justify-content: center;
+  align-items: center;
 }
 
 footer {
@@ -484,24 +496,63 @@ footer a:hover {
 }
 
 .cgu {
+  width: 100%;
   max-width: 720px;
   margin: 0 auto;
 }
+.cgu h1 {
+  margin-bottom: 0.25rem;
+}
 .cgu h2 {
-  margin-top: 1.5rem;
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--half-darkgrey);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fff;
+}
+.cgu h3 {
+  margin-top: 1.25rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ddd;
 }
 .cgu p,
 .cgu ul {
   font-size: 0.9rem;
-  line-height: 1.6;
+  line-height: 1.65;
   color: #bbb;
   margin-top: 0.4rem;
 }
 .cgu ul {
   padding-left: 1.25rem;
+  list-style: disc;
 }
 .cgu li {
   margin-bottom: 0.3rem;
+}
+.cgu li::marker {
+  color: var(--red);
+}
+.cgu a {
+  color: var(--red);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.cgu a:hover {
+  color: #ff4d4d;
+}
+.cgu .meta {
+  font-size: 0.8rem;
+  color: #888;
+}
+.cgu .page-links {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--half-darkgrey);
+}
+.cgu .back-link {
+  margin-top: 0.5rem;
 }
 
 .dark {

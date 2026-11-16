@@ -8,6 +8,7 @@ import {
   triggerDownload,
   type DownloadFormat,
 } from "@/lib/download";
+import { CC0_URL } from "@/lib/cc0";
 
 export default function GalleryCard({
   id,
@@ -22,7 +23,7 @@ export default function GalleryCard({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [imageReady, setImageReady] = useState(false);
-  
+
   const imageRef = useCallback((node: HTMLImageElement | null) => {
     if (node?.complete) setImageReady(true);
   }, []);
@@ -147,6 +148,17 @@ export default function GalleryCard({
             </Menu.Root>
           </div>
         </div>
+        <p className="text-xs text-grey">
+          Released under{" "}
+          <a
+            className="text-red hover:text-red-300"
+            href={CC0_URL}
+            target="_blank"
+            rel="noopener"
+          >
+            CC0 1.0
+          </a>
+        </p>
       </div>
     </article>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
 import * as opentype from "opentype.js";
 import { Menu } from "@base-ui/react/menu";
 import { ChevronDown } from "lucide-react";
@@ -10,6 +11,7 @@ import {
   handleLogoSubmitted,
   submitLogo,
 } from "@/app/actions";
+import { addCc0Metadata, CC0_URL } from "@/lib/cc0";
 import {
   rasterizeSvg,
   triggerDownload,
@@ -199,14 +201,14 @@ function buildSVG(
     : "";
   const gridOverlay = showGrid ? buildGridOverlay() : "";
 
-  return `<?xml version="1.0" encoding="utf-8"?>
+  return addCc0Metadata(`<?xml version="1.0" encoding="utf-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SVG_SIZE} ${SVG_SIZE}" width="${SVG_SIZE}" height="${SVG_SIZE}">
   <circle cx="${SVG_CENTER}" cy="${SVG_CENTER}" r="225" stroke="#000" fill="#fff" stroke-width="50"/>
   ${centerGroup}
   <g fill="#fff">${topTextPaths}</g>
   <g fill="#fff">${bottomTextPaths}</g>
   <g stroke-linecap="round">${gridOverlay}</g>
-</svg>`;
+</svg>`);
 }
 
 function buildLogoImageGroup(
@@ -248,6 +250,7 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
   >("idle");
   const [submissionError, setSubmissionError] = useState("");
   const [logoName, setLogoName] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   useEffect(() => {
     fetch(FONT_URL)
@@ -313,6 +316,11 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
   };
 
   const handleShare = async () => {
+    if (!acceptedTerms) {
+      setSubmissionError("You must accept the Terms of Service.");
+      setSubmissionState("error");
+      return;
+    }
     setSubmissionState("pending");
     setSubmissionError("");
     try {
@@ -321,6 +329,7 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
         logoName,
         settings.topText,
         settings.bottomText,
+        acceptedTerms,
       );
       if (result.ok) {
         setSubmissionState("success");
@@ -444,7 +453,13 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
         </ul>
       </details>
 
-      <Dialog open={enableSharePopup} onOpenChange={setEnableSharePopup}>
+      <Dialog
+        open={enableSharePopup}
+        onOpenChange={(open) => {
+          setEnableSharePopup(open);
+          if (!open) setAcceptedTerms(false);
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
@@ -493,6 +508,36 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
               </span>
             </label>
 
+            <label className="flex w-full cursor-pointer items-start gap-3 rounded-lg border border-half-darkgrey bg-[#222] p-3 text-left text-[0.82rem] leading-relaxed text-[#aaa]">
+              <input
+                type="checkbox"
+                className="share-checkbox focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red"
+                checked={acceptedTerms}
+                onChange={(event) => setAcceptedTerms(event.target.checked)}
+              />
+              <span>
+                I have read and accept the{" "}
+                <Link
+                  className="text-red hover:text-red-300"
+                  href="/cgu"
+                  target="_blank"
+                >
+                  Terms of Service
+                </Link>
+                . I confirm that I hold the rights to this logo and release it
+                under{" "}
+                <a
+                  className="text-red hover:text-red-300"
+                  href={CC0_URL}
+                  target="_blank"
+                  rel="noopener"
+                >
+                  CC0 1.0
+                </a>{" "}
+                (section 6.3).
+              </span>
+            </label>
+
             {submissionState === "success" && (
               <p role="status" className="text-sm text-green-400">
                 Submitted for review. Thank you!
@@ -509,7 +554,9 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
               type="button"
               onClick={handleShare}
               disabled={
-                submissionState === "pending" || submissionState === "success"
+                !acceptedTerms ||
+                submissionState === "pending" ||
+                submissionState === "success"
               }
             >
               {submissionState === "pending" ? "Submitting…" : "Yes"}

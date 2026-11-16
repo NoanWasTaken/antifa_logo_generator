@@ -1,6 +1,7 @@
 "use server";
 import sharp from "sharp";
 import { incrementCount, saveLogo } from "@/lib/db";
+import { addCc0Metadata } from "@/lib/cc0";
 import { allowRequest } from "@/lib/rate-limit";
 import { sanitizeLogoSvg } from "@/lib/sanitize-logo";
 import { revalidatePath } from "next/cache";
@@ -8,6 +9,15 @@ import { headers } from "next/headers";
 
 const workflowUrl = process.env.WORKFLOW_URL;
 const workflowKey = process.env.WORKFLOW_KEY;
+
+async function clientIp() {
+  const requestHeaders = await headers();
+  return (
+    requestHeaders.get("cf-connecting-ip") ||
+    requestHeaders.get("x-forwarded-for")?.split(",")[0].trim() ||
+    "unknown"
+  );
+}
 
 async function notifyWorkflow() {
   if (!workflowKey || !workflowUrl) return;
@@ -40,11 +50,16 @@ async function notifyWorkflowLogoSubmitted(body: string) {
   });
 }
 export async function handleLogoSubmitted(body: string) {
+  if (typeof body !== "string" || body.length > 2 * 1024 * 1024) return;
+  if (!allowRequest(`preview:${await clientIp()}`, 5, 60_000)) return;
   console.log("handleLogoSubmitted called with body:", body);
-  notifyWorkflowLogoSubmitted(body);
+  notifyWorkflowLogoSubmitted(body).catch((error) =>
+    console.error("Failed workflow (logo):", error),
+  );
 }
 
 export async function handleIncrement() {
+  if (!allowRequest(`count:${await clientIp()}`, 10, 60_000)) return null;
   const newCount = incrementCount();
 
   notifyWorkflow();
@@ -80,7 +95,12 @@ export async function submitLogo(
   name?: string,
   topText?: string,
   bottomText?: string,
+  acceptedTerms?: boolean,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (acceptedTerms !== true) {
+    return { ok: false, error: "You must accept the Terms of Service." };
+  }
+
   if (typeof svg !== "string") {
     return { ok: false, error: "Invalid logo." };
   }
@@ -94,16 +114,19 @@ export async function submitLogo(
     return { ok: false, error: "Invalid logo." };
   }
 
-  const requestHeaders = await headers();
-  const ip =
-    requestHeaders.get("cf-connecting-ip") ||
-    requestHeaders.get("x-forwarded-for")?.split(",")[0].trim() ||
-    "unknown";
+  const ip = await clientIp();
 
   if (!allowRequest(`submit:${ip}`, 3, 60_000)) {
     return {
       ok: false,
       error: "Too many submissions. Please try again in a minute.",
+    };
+  }
+
+  if (!allowRequest(`submit-hour:${ip}`, 10, 3_600_000)) {
+    return {
+      ok: false,
+      error: "Too many submissions. Please try again later.",
     };
   }
 
@@ -113,8 +136,13 @@ export async function submitLogo(
   }
 
   const cleanedName = deriveLogoName(name, topText, bottomText);
+  const acceptedAt = new Date().toISOString();
 
-  saveLogo(sanitized, cleanedName);
+  saveLogo(addCc0Metadata(sanitized), cleanedName, {
+    ip: ip === "unknown" ? null : ip,
+    acceptedAt,
+    submittedAt: acceptedAt,
+  });
   revalidatePath("/admin");
 
   return { ok: true };

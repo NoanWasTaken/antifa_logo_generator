@@ -52,7 +52,6 @@ async function notifyWorkflowLogoSubmitted(body: string) {
 export async function handleLogoSubmitted(body: string) {
   if (typeof body !== "string" || body.length > 2 * 1024 * 1024) return;
   if (!allowRequest(`preview:${await clientIp()}`, 5, 60_000)) return;
-  console.log("handleLogoSubmitted called with body:", body);
   notifyWorkflowLogoSubmitted(body).catch((error) =>
     console.error("Failed workflow (logo):", error),
   );

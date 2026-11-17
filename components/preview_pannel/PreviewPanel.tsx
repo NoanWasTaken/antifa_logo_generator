@@ -605,8 +605,6 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
           {copied ? "Copied!" : "Copy code"}
         </button>
       </div>
-
-      <textarea readOnly value={svgCode} />
     </div>
   );
 }

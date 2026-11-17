@@ -285,7 +285,13 @@ export function setLogoStatus(id: number, status: LogoStatus): void {
 }
 
 export function deleteLogo(id: number): void {
-  db.query("DELETE FROM logo WHERE id = $id").run({ $id: id });
+  const remove = db.transaction(() => {
+    db.query("DELETE FROM moderation_log WHERE logo_id = $id").run({
+      $id: id,
+    });
+    db.query("DELETE FROM logo WHERE id = $id").run({ $id: id });
+  });
+  remove.immediate();
 }
 
 export function recordLogoDownload(id: number): void {
@@ -299,15 +305,21 @@ export function saveLogo(
   name: string | null,
   submission: LogoSubmission,
 ): void {
-  db.query(
-    `INSERT INTO logo (value, status, name, submitted_at, ip, terms_version, accepted_at)
+  const result = db
+    .query(
+      `INSERT INTO logo (value, status, name, submitted_at, ip, terms_version, accepted_at)
      VALUES ($logoValue, 'waiting', $name, $submittedAt, $ip, $termsVersion, $acceptedAt)`,
-  ).run({
-    $logoValue: logoValue,
-    $name: name,
-    $submittedAt: submission.submittedAt,
-    $ip: submission.ip,
-    $termsVersion: TERMS_VERSION,
-    $acceptedAt: submission.acceptedAt,
-  });
+    )
+    .run({
+      $logoValue: logoValue,
+      $name: name,
+      $submittedAt: submission.submittedAt,
+      $ip: submission.ip,
+      $termsVersion: TERMS_VERSION,
+      $acceptedAt: submission.acceptedAt,
+    });
+
+  console.log(
+    `${ts()} -> Logo #${result.lastInsertRowid} submitted (${logoValue.length} bytes, name: ${name ?? "none"})`,
+  );
 }

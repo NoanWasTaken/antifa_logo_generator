@@ -3,6 +3,7 @@ import sharp from "sharp";
 import { incrementCount, saveLogo } from "@/lib/db";
 import { addCc0Metadata } from "@/lib/cc0";
 import { allowRequest } from "@/lib/rate-limit";
+import { boundedSvg } from "@/lib/bounded-svg";
 import { sanitizeLogoSvg } from "@/lib/sanitize-logo";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
@@ -31,7 +32,9 @@ async function notifyWorkflow() {
 
 async function notifyWorkflowLogoSubmitted(body: string) {
   if (!workflowKey || !workflowUrl) return;
-  const png = await sharp(Buffer.from(body), { density: 72 })
+  const bounded = boundedSvg(body);
+  if (!bounded) return;
+  const png = await sharp(Buffer.from(bounded), { density: 72 })
     .resize(256, 256, { fit: "inside" })
     .flatten({ background: "#ffffff" })
     .png({ palette: true, colors: 16, compressionLevel: 9, effort: 10 })

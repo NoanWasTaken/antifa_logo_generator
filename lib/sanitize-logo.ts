@@ -146,6 +146,7 @@ export function sanitizeLogoSvg(svg: string): string | null {
       "*": (tagName, attribs) => {
         const safe: Record<string, string> = {};
         for (const [name, value] of Object.entries(attribs)) {
+          if (value === "") continue;
           const isHref = name === "href" || name === "xlink:href";
           if (isHref && !SAFE_HREF.test(value)) continue;
           if (

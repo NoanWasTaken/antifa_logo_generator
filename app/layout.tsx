@@ -22,14 +22,14 @@ export const metadata: Metadata = {
     description:
       "Create a custom antifascist logo online. Add your own text, upload a central image or SVG, adjust colors and layout, then download or copy the SVG code.",
     url: "https://antifalogogenerator.noandelatouche.dev/",
-    images: ["https://antifalogogenerator.noandelatouche.dev/og-image.png"],
+    images: ["https://antifalogogenerator.noandelatouche.dev/antifa_logo.png"],
   },
   twitter: {
     card: "summary_large_image",
     title: "Antifascist Logo Generator - Create Custom SVGs",
     description:
       "Create a custom antifascist logo online. Add your own text, upload a central image or SVG, adjust colors and layout, then download or copy the SVG code.",
-    images: ["https://antifalogogenerator.noandelatouche.dev/og-image.png"],
+    images: ["https://antifalogogenerator.noandelatouche.dev/antifa_logo.png"],
   },
   icons: {
     icon: "/favicon.ico",

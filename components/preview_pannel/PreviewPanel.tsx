@@ -86,7 +86,9 @@ function buildGlyphsOnArc(
     const rotationDegrees = (angle * 180) / Math.PI + arcDirection * 90;
 
     const pathData = glyph.getPath(0, 0, fontSize).toPathData(2);
-    svgPaths += `<path d="${pathData}" transform="translate(${x.toFixed(2)},${y.toFixed(2)}) rotate(${rotationDegrees.toFixed(2)}) translate(${(-glyphWidth / 2).toFixed(2)},0)"/>`;
+    if (pathData) {
+      svgPaths += `<path d="${pathData}" transform="translate(${x.toFixed(2)},${y.toFixed(2)}) rotate(${rotationDegrees.toFixed(2)}) translate(${(-glyphWidth / 2).toFixed(2)},0)"/>`;
+    }
 
     cursorOffset += glyphWidth;
   }

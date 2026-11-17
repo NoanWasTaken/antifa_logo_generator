@@ -13,19 +13,23 @@ export async function GET(
   }
 
   const download = new URL(request.url).searchParams.get("download") === "1";
-  if (download) {
-    const ip =
-      request.headers.get("cf-connecting-ip") ||
-      request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
-      "unknown";
-    if (!allowRequest(`download:${ip}`, 8, 60_000)) {
-      return new Response("Too many downloads. Try again in a minute.", {
-        status: 429,
-        headers: { "Retry-After": "60" },
-      });
-    }
-    recordLogoDownload(logo.id);
+  const ip =
+    request.headers.get("cf-connecting-ip") ||
+    request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+    "unknown";
+  if (download && !allowRequest(`download:${ip}`, 8, 60_000)) {
+    return new Response("Too many downloads. Try again in a minute.", {
+      status: 429,
+      headers: { "Retry-After": "60" },
+    });
   }
+  if (!download && !allowRequest(`gallery:${ip}`, 120, 60_000)) {
+    return new Response("Too many requests. Try again in a minute.", {
+      status: 429,
+      headers: { "Retry-After": "60" },
+    });
+  }
+  if (download) recordLogoDownload(logo.id);
 
   return new Response(addCc0Metadata(logo.value), {
     headers: {

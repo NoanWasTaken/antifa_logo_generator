@@ -20,13 +20,6 @@ export default function MessageWrapper({
   const dismissed = useStore(messageStore, (s) => s.dismissedMessage);
   const isDismissed = dismissed === message;
 
-  console.log("[Wrapper] render:", {
-    message,
-    hydrated,
-    dismissed,
-    isDismissed,
-  });
-
   const handleDismiss = useCallback(() => {
     messageStore.getState().dismiss(message);
   }, [message]);

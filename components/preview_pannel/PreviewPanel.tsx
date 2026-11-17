@@ -462,8 +462,8 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
           if (!open) setAcceptedTerms(false);
         }}
       >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+        <DialogContent className="flex max-h-[calc(100dvh-2rem)] flex-col sm:max-w-md">
+          <DialogHeader className="min-h-0 overflow-y-auto overscroll-contain">
             <DialogTitle>
               Do you want to share your logo with the community ?
             </DialogTitle>
@@ -477,19 +477,12 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
               </span>
             </DialogDescription>
 
-            <div
-              style={{
-                maxWidth: "100%",
-                borderRadius: "8px",
-                background: "#fff",
-                maxHeight: "500px",
-              }}
-            >
+            <div className="max-w-full rounded-lg bg-white">
               {dialogUrl && (
                 <img
                   src={dialogUrl}
                   alt="Antifascist logo preview"
-                  className="block h-auto w-full"
+                  className="mx-auto block h-auto max-h-[32dvh] w-auto max-w-full sm:max-h-[500px]"
                 />
               )}
             </div>
@@ -551,7 +544,7 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
               </p>
             )}
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="shrink-0">
             <Button
               type="button"
               onClick={handleShare}

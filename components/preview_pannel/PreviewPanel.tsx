@@ -508,7 +508,7 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
               </span>
             </label>
 
-            <label className="flex w-full cursor-pointer items-start gap-3 rounded-lg border border-half-darkgrey bg-[#222] p-3 text-left text-[0.82rem] leading-relaxed text-[#aaa] transition-colors hover:border-grey/60">
+            <label className="flex! w-full cursor-pointer items-start gap-3 rounded-lg border border-half-darkgrey bg-[#222] p-3 text-left text-[0.82rem] leading-relaxed text-[#aaa] transition-colors hover:border-grey/60">
               <input
                 type="checkbox"
                 className="share-checkbox focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"

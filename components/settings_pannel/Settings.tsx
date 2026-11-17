@@ -136,7 +136,7 @@ export default function Settings({ settings, onChange }: SettingsProps) {
             target="_blank"
             rel="noopener"
           >
-            <strong>Antifaschistische Aktion</strong>
+            <strong> Antifaschistische Aktion </strong>
           </a>
           (Antifascist Action), a united front formed by the Communist Party of
           Germany (KPD) in 1932 to resist the rising Nazi movement. Its two
@@ -212,8 +212,8 @@ export default function Settings({ settings, onChange }: SettingsProps) {
           Using an <strong>Antifascist Logo Generator</strong> is a small but
           visible way to show solidarity. Whether you&apos;re printing stickers,
           posting online, or organizing locally, the
-          <strong>Antifa symbol</strong> communicates a clear message: there is
-          no neutrality when it comes to fascism. As historian
+          <strong> Antifa symbol </strong> communicates a clear message: there
+          is no neutrality when it comes to fascism. As historian
           <a
             href="https://fr.wikipedia.org/wiki/Mark_Bray"
             target="_blank"

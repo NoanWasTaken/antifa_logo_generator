@@ -14,9 +14,13 @@ bun dev
 
 ## Stack
 
-- Vanilla HTML, CSS, JS
+- Next.js 16, React 19, Tailwind CSS 4
 - [opentype.js](https://github.com/opentypejs/opentype.js) for text-on-arc rendering
 
 ## License
+
+The source code is MIT-licensed. Logos generated with the tool and logos
+downloaded from the gallery are released under
+[CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/).
 
 [MIT](https://github.com/NoanWasTaken/antifa_logo_generator/edit/dev/LICENSE)

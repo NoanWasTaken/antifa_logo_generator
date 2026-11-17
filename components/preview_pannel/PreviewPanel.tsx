@@ -1,9 +1,32 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
 import * as opentype from "opentype.js";
+import { Menu } from "@base-ui/react/menu";
+import { ChevronDown } from "lucide-react";
 import type { LogoSettings } from "../LogoGenerator";
-import { handleIncrement } from "@/app/actions";
+import {
+  handleIncrement,
+  handleLogoSubmitted,
+  submitLogo,
+} from "@/app/actions";
+import { addCc0Metadata, CC0_URL } from "@/lib/cc0";
+import {
+  rasterizeSvg,
+  triggerDownload,
+  type DownloadFormat,
+} from "@/lib/download";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import { Button } from "../ui/button";
 
 const FLAG_RED_PATH =
   "M125.667,122.917c0,0,28,33.083,89.25,34.333c61.251,1.25,95.917-37.917,130.917-33.333s63,43.333,77.75,50.167L333,425.75c0,0-1.833,1.334-11,4.667s-11.333,4.333-11.333,4.333l40.25-122.917c0,0-38.75-32.687-73.75-35c-35.001-2.313-50.917,23.75-110.083,13.75C107.917,280.583,69.5,243.5,69.5,243.5s-1.415-21.067,14.5-59.833C99.914,144.902,125.667,122.917,125.667,122.917z";
@@ -178,14 +201,14 @@ function buildSVG(
     : "";
   const gridOverlay = showGrid ? buildGridOverlay() : "";
 
-  return `<?xml version="1.0" encoding="utf-8"?>
+  return addCc0Metadata(`<?xml version="1.0" encoding="utf-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SVG_SIZE} ${SVG_SIZE}" width="${SVG_SIZE}" height="${SVG_SIZE}">
   <circle cx="${SVG_CENTER}" cy="${SVG_CENTER}" r="225" stroke="#000" fill="#fff" stroke-width="50"/>
   ${centerGroup}
   <g fill="#fff">${topTextPaths}</g>
   <g fill="#fff">${bottomTextPaths}</g>
   <g stroke-linecap="round">${gridOverlay}</g>
-</svg>`;
+</svg>`);
 }
 
 function buildLogoImageGroup(
@@ -193,8 +216,10 @@ function buildLogoImageGroup(
   settings: LogoSettings,
 ): string {
   const scaleFactor = settings.scale / 100;
-  return `<g transform="translate(${settings.posX},${settings.posY}) translate(256,256) scale(${scaleFactor}) translate(-256,-256)">
-    <image href="${logoDataURL}" width="512" height="512" preserveAspectRatio="xMidYMid meet"/>
+  const size = 402;
+  const inset = (512 - size) / 2 - 6; //56
+  return `<g transform="translate(${settings.posX},${settings.posY}) translate(${SVG_CENTER},${SVG_CENTER}) scale(${scaleFactor}) translate(-${SVG_CENTER},-${SVG_CENTER})">
+    <image href="${logoDataURL}" x="${inset}" y="${inset}" width="${size}" height="${size}" preserveAspectRatio="xMidYMid meet"/>
   </g>`;
 }
 
@@ -203,6 +228,10 @@ function buildDefaultFlagsGroup(): string {
     <path d="${FLAG_RED_PATH}" fill="#cc0000"/>
     <path d="${FLAG_BLACK_PATH}" fill="#000"/>
   </g>`;
+}
+
+function svgToDataUrl(svg: string): string {
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
 interface PreviewPanelProps {
@@ -215,7 +244,13 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
   const [showGrid, setShowGrid] = useState(false);
   const [logoDataURL, setLogoDataURL] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const previewRef = useRef<HTMLDivElement>(null);
+  const [enableSharePopup, setEnableSharePopup] = useState<boolean>(false);
+  const [submissionState, setSubmissionState] = useState<
+    "idle" | "pending" | "success" | "error"
+  >("idle");
+  const [submissionError, setSubmissionError] = useState("");
+  const [logoName, setLogoName] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   useEffect(() => {
     fetch(FONT_URL)
@@ -253,23 +288,61 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
     () => buildSVG(font, settings, logoDataURL, showGrid),
     [font, settings, logoDataURL, showGrid],
   );
+  const dialogSvgCode = useMemo(
+    () => buildSVG(font, settings, logoDataURL, false),
+    [font, settings, logoDataURL],
+  );
+  const previewUrl = useMemo(() => svgToDataUrl(svgCode), [svgCode]);
+  const dialogUrl = useMemo(() => svgToDataUrl(dialogSvgCode), [dialogSvgCode]);
 
-  useEffect(() => {
-    if (previewRef.current) {
-      previewRef.current.innerHTML = svgCode;
+  const handleDownload = async (format: DownloadFormat) => {
+    try {
+      const blob =
+        format === "svg"
+          ? new Blob([dialogSvgCode], { type: "image/svg+xml" })
+          : await rasterizeSvg(dialogSvgCode, format);
+      triggerDownload(
+        blob,
+        `antifa_logo.${format === "jpeg" ? "jpg" : format}`,
+      );
+
+      handleIncrement();
+      setSubmissionState("idle");
+      setSubmissionError("");
+      setEnableSharePopup(true);
+    } catch (error) {
+      console.error("Download failed:", error);
     }
-  }, [svgCode]);
+  };
 
-  const handleDownload = () => {
-    const cleanSvg = buildSVG(font, settings, logoDataURL, false);
-    const blob = new Blob([cleanSvg], { type: "image/svg+xml" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "antifa_logo.svg";
-    link.click();
-    handleIncrement();
-    URL.revokeObjectURL(url);
+  const handleShare = async () => {
+    if (!acceptedTerms) {
+      setSubmissionError("You must accept the Terms of Service.");
+      setSubmissionState("error");
+      return;
+    }
+    setSubmissionState("pending");
+    setSubmissionError("");
+    try {
+      const result = await submitLogo(
+        dialogSvgCode,
+        logoName,
+        settings.topText,
+        settings.bottomText,
+        acceptedTerms,
+      );
+      if (result.ok) {
+        setSubmissionState("success");
+        handleLogoSubmitted(dialogSvgCode);
+      } else {
+        setSubmissionError(result.error);
+        setSubmissionState("error");
+      }
+    } catch (error) {
+      console.error("Logo submission failed:", error);
+      setSubmissionError("Something went wrong. Please try again.");
+      setSubmissionState("error");
+    }
   };
 
   const handleCopy = () => {
@@ -334,16 +407,21 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
       </label>
 
       <div
-        ref={previewRef}
-        role="img"
-        aria-label="Antifascist logo preview"
         style={{
           maxWidth: "100%",
           borderRadius: "8px",
           background: "#fff",
           maxHeight: "500px",
         }}
-      />
+      >
+        {previewUrl && (
+          <img
+            src={previewUrl}
+            alt="Antifascist logo preview"
+            className="block h-auto w-full"
+          />
+        )}
+      </div>
 
       <details className="howto">
         <summary>How to use your logo</summary>
@@ -359,7 +437,7 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
             legible even as a small avatar.
           </li>
           <li>
-            <strong>Flyers &amp; posters</strong> - Download the SVG and place
+            <strong>Flyers &amp; posters</strong> - Download the logo and place
             it on your flyer layout. The vector format scales to any size
             without losing quality.
           </li>
@@ -375,16 +453,158 @@ export default function PreviewPanel({ settings }: PreviewPanelProps) {
         </ul>
       </details>
 
+      <Dialog
+        open={enableSharePopup}
+        onOpenChange={(open) => {
+          setEnableSharePopup(open);
+          if (!open) setAcceptedTerms(false);
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              Do you want to share your logo with the community ?
+            </DialogTitle>
+            <DialogDescription>
+              By sharing your logo, you will contribute to the community and
+              help others create their own antifascist logos. Your logo will be
+              added to the gallery of logos that other users can browse and use
+              as inspiration or download.{" "}
+              <span className="font-bold text-red">
+                Your logo will be reviewed before being added to the gallery.
+              </span>
+            </DialogDescription>
+
+            <div
+              style={{
+                maxWidth: "100%",
+                borderRadius: "8px",
+                background: "#fff",
+                maxHeight: "500px",
+              }}
+            >
+              {dialogUrl && (
+                <img
+                  src={dialogUrl}
+                  alt="Antifascist logo preview"
+                  className="block h-auto w-full"
+                />
+              )}
+            </div>
+
+            <label className="flex flex-col gap-1 text-left text-sm text-[#aaa]">
+              Logo name (optional)
+              <input
+                type="text"
+                value={logoName}
+                onChange={(event) => setLogoName(event.target.value)}
+                maxLength={60}
+                placeholder="e.g. Antifascist ant"
+                className="w-full rounded-md border border-half-darkgrey bg-[#1a1a1a] px-3 py-2 text-sm text-white placeholder:text-grey focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              />
+              <span className="text-xs text-grey">
+                Helps people find your logo in the gallery search. Leave empty
+                to use your top and bottom text instead.
+              </span>
+            </label>
+
+            <label className="flex! w-full cursor-pointer items-start gap-3 rounded-lg border border-half-darkgrey bg-[#222] p-3 text-left text-[0.82rem] leading-relaxed text-[#aaa] transition-colors hover:border-grey/60">
+              <input
+                type="checkbox"
+                className="share-checkbox focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                checked={acceptedTerms}
+                onChange={(event) => setAcceptedTerms(event.target.checked)}
+              />
+              <span>
+                I have read and accept the{" "}
+                <Link
+                  className="text-red hover:text-red-300"
+                  href="/cgu"
+                  target="_blank"
+                >
+                  Terms of Service
+                </Link>
+                . I confirm that I hold the rights to this logo and release it
+                under{" "}
+                <a
+                  className="text-red hover:text-red-300"
+                  href={CC0_URL}
+                  target="_blank"
+                  rel="noopener"
+                >
+                  CC0 1.0
+                </a>{" "}
+                (section 6.3).
+              </span>
+            </label>
+
+            {submissionState === "success" && (
+              <p role="status" className="text-sm text-green-400">
+                Submitted for review. Thank you!
+              </p>
+            )}
+            {submissionState === "error" && (
+              <p role="alert" className="text-sm text-red-300">
+                {submissionError}
+              </p>
+            )}
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              onClick={handleShare}
+              disabled={
+                !acceptedTerms ||
+                submissionState === "pending" ||
+                submissionState === "success"
+              }
+            >
+              {submissionState === "pending" ? "Submitting…" : "Yes"}
+            </Button>
+            <DialogClose render={<Button type="button" variant="secondary" />}>
+              {submissionState === "success" ? "Close" : "No"}
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <div className="actions">
-        <button className="btn-primary" onClick={handleDownload}>
-          Download SVG
-        </button>
+        <div className="download-split">
+          <button className="btn-primary" onClick={() => handleDownload("png")}>
+            Download PNG
+          </button>
+          <Menu.Root>
+            <Menu.Trigger
+              className="btn-primary split-trigger"
+              aria-label="Choose download format"
+            >
+              <ChevronDown className="size-4" />
+            </Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner
+                align="end"
+                sideOffset={4}
+                className="isolate z-50 outline-none"
+              >
+                <Menu.Popup className="min-w-36 rounded-lg bg-[#222] p-1 text-sm text-foreground shadow-md ring-1 ring-white/10 outline-none">
+                  {(["png", "svg", "jpeg"] as const).map((format) => (
+                    <Menu.Item
+                      key={format}
+                      onClick={() => handleDownload(format)}
+                      className="cursor-pointer rounded-md px-3 py-2 outline-none select-none data-highlighted:bg-[#333]"
+                    >
+                      {format.toUpperCase()}
+                    </Menu.Item>
+                  ))}
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </div>
         <button className="btn-secondary" onClick={handleCopy}>
           {copied ? "Copied!" : "Copy code"}
         </button>
       </div>
-
-      <textarea readOnly value={svgCode} />
     </div>
   );
 }
